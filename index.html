@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>تحدي الذكاء الاصطناعي | البرمجة والذكاء الاصطناعي</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<canvas id="fx"></canvas>
+
+<div class="bg-orbs"><span></span><span></span><span></span></div>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">🤖</span>
+    <div class="brand-txt">
+      <h1>تحدي الذكاء الاصطناعي</h1>
+      <small>البرمجة والذكاء الاصطناعي — الصف الثاني الثانوي</small>
+    </div>
+  </div>
+  <div class="hud">
+    <div class="chip score-chip" id="score-chip">⭐ <b id="score">0</b></div>
+    <div class="chip streak-chip" id="streak-chip">🔥 <b id="streak">0</b></div>
+  </div>
+</header>
+
+<main>
+  <!-- ============ شاشة البداية ============ -->
+  <section id="screen-home" class="screen active">
+    <div class="hero">
+      <h2>اختر المستوى والدرس وابدأ التحدي</h2>
+      <p class="sub" id="hero-sub"></p>
+    </div>
+
+    <div class="lv-wrap">
+      <div class="lv-tabs">
+        <button class="lv-btn on" id="lv1-btn"><b>المستوى الأول</b><span>أسئلة الدرس</span></button>
+        <button class="lv-btn" id="lv2-btn"><b>المستوى الثاني</b><span>أسئلة الامتحان</span></button>
+      </div>
+      <p class="lv-desc" id="lv-desc"></p>
+    </div>
+
+    <div class="legend">
+      <div class="lg"><b class="ok">+١٠</b><span>إجابة صحيحة</span></div>
+      <div class="lg"><b class="bad">−٥</b><span>إجابة خاطئة</span></div>
+      <div class="lg"><b class="bonus">+٢٥</b><span>إجابة سريعة قبل انتهاء الوقت</span></div>
+<div class="lg"><b class="combo">×٢</b><span>مضاعف عند تكرار الإجابات الصحيحة</span></div>
+    </div>
+
+    <div id="lessons" class="lessons"></div>
+
+    <div class="all-wrap">
+      <button class="btn big primary" id="btn-all">🎮 الامتحان الشامل — كل الدروس</button>
+      <p class="hint">اختر درسًا واحدًا أو ادخل الامتحان الشامل. يمكنك الإجابة بمفاتيح 1 2 3 4 أو النقر.</p>
+    </div>
+  </section>
+
+  <!-- ============ شاشة السؤال ============ -->
+  <section id="screen-quiz" class="screen">
+    <div class="quiz-head">
+      <div class="qh-row">
+        <button class="btn ghost" id="btn-quit">✖ خروج</button>
+        <div class="qh-title">
+          <span class="badge" id="q-lesson">1-1</span>
+          <span class="badge lvl" id="q-level">المستوى الأول</span>
+          <span id="q-counter">١ / ١٠</span>
+        </div>
+      </div>
+      <div class="bar"><div class="bar-fill" id="bar-fill"></div></div>
+      <div class="timer"><div class="timer-fill" id="timer-fill"></div></div>
+    </div>
+
+    <div class="card">
+      <div class="q-num" id="q-num">سؤال</div>
+      <h3 class="q-text" id="q-text"></h3>
+      <div class="options" id="options"></div>
+      <div class="feedback" id="feedback">
+        <div class="fb-title" id="fb-title"></div>
+        <div class="fb-body" id="fb-body"></div>
+      </div>
+      <button class="btn primary next" id="btn-next">التالي ⏭</button>
+    </div>
+  </section>
+
+  <!-- ============ شاشة النتيجة ============ -->
+  <section id="screen-result" class="screen">
+    <div class="card result-card">
+      <div class="medal" id="medal">🏆</div>
+      <h2 id="res-title">انتهى الامتحان</h2>
+      <div class="res-score" id="res-score">0</div>
+      <div class="res-stars" id="res-stars"></div>
+      <p class="res-msg" id="res-msg"></p>
+      <div class="res-stats">
+        <div class="stat"><b id="st-correct">0</b><span>صحيحة</span></div>
+        <div class="stat"><b id="st-wrong">0</b><span>خاطئة</span></div>
+        <div class="stat"><b id="st-pct">0%</b><span>النسبة</span></div>
+        <div class="stat"><b id="st-best">0</b><span>أطول سلسلة</span></div>
+      </div>
+      <div class="review" id="review"></div>
+      <div class="res-btns">
+        <button class="btn primary" id="btn-retry">🔄 إعادة المحاولة</button>
+        <button class="btn ghost" id="btn-home">🏠 اختيار درس آخر</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">محتوى الأسئلة مبني على نص الكتاب — الفصول الأول والثاني</footer>
+
+<script src="data-11.js"></script>
+<script src="data-12.js"></script>
+<script src="data-13.js"></script>
+<script src="data-14.js"></script>
+<script src="data-21.js"></script>
+<script src="data-22.js"></script>
+<script src="data-23.js"></script>
+<script src="data-variety.js"></script>
+<script src="data2-11.js"></script>
+<script src="data2-12.js"></script>
+<script src="data2-13.js"></script>
+<script src="data2-14.js"></script>
+<script src="data2-21.js"></script>
+<script src="data2-22.js"></script>
+<script src="data2-23.js"></script>
+<script src="data2-variety.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
