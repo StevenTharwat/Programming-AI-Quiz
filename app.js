@@ -31,8 +31,130 @@ const CFG = {
   correct: 10,        // نقاط الإجابة الصحيحة
   wrong: -5,          // نقاط الإجابة الخاطئة
   speedBonus: 25,     // نقاط الإجابة السريعة
-  fastTime: 10        // زمن البونس
+  fastTime: 10,       // زمن البونس
+  xpCorrect: 5,       // خبرة للإجابة الصحيحة
+  xpLessonComplete: 50, // خبرة عند إكمال درس
+  xpPerfect: 100      // خبرة عند العلامة الكاملة
 };
+
+/* ---------- الوضع الليلي / الفاتح ---------- */
+const THEME_KEY = 'aiq_theme';
+let theme = localStorage.getItem(THEME_KEY) || 'dark';
+function applyTheme() {
+  if (theme === 'light') document.body.classList.add('light');
+  else document.body.classList.remove('light');
+  const btn = $('theme-toggle');
+  if (btn) btn.textContent = theme === 'light' ? '☀️' : '🌙';
+}
+function toggleTheme() {
+  theme = theme === 'light' ? 'dark' : 'light';
+  localStorage.setItem(THEME_KEY, theme);
+  applyTheme();
+}
+
+/* ---------- التقدم لكل درس (localStorage) ---------- */
+const PROGRESS_KEY = 'aiq_progress';
+let Progress = {}; // { lessonId: { done, best, attempts, lastPlayed, xp } }
+function loadProgress() {
+  try {
+    const raw = localStorage.getItem(PROGRESS_KEY);
+    Progress = raw ? JSON.parse(raw) : {};
+  } catch (e) { Progress = {}; }
+}
+function saveProgress() {
+  try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(Progress)); } catch (e) {}
+}
+function getProgress(lessonId) {
+  return Progress[lessonId] || { done: false, best: 0, attempts: 0, lastPlayed: 0, xp: 0 };
+}
+function updateProgress(lessonId, pct, xpEarned) {
+  const prev = getProgress(lessonId);
+  const next = {
+    done: pct === 100,
+    best: Math.max(prev.best, pct),
+    attempts: prev.attempts + 1,
+    lastPlayed: Date.now(),
+    xp: prev.xp + xpEarned
+  };
+  Progress[lessonId] = next;
+  saveProgress();
+  return next;
+}
+
+/* ---------- دفتر الأخطاء الدائم ---------- */
+const NOTEBOOK_KEY = 'aiq_notebook';
+let Notebook = []; // [{q, right, lesson, date}]
+function loadNotebook() {
+  try {
+    const raw = localStorage.getItem(NOTEBOOK_KEY);
+    Notebook = raw ? JSON.parse(raw) : [];
+  } catch (e) { Notebook = []; }
+}
+function saveNotebook() {
+  try { localStorage.setItem(NOTEBOOK_KEY, JSON.stringify(Notebook)); } catch (e) {}
+}
+function addToNotebook(q, right, lesson) {
+  Notebook.push({ q, right, lesson: lesson.num || lesson.title || '', date: Date.now() });
+  saveNotebook();
+}
+function clearNotebook() {
+  Notebook = [];
+  saveNotebook();
+}
+function buildNotebook() {
+  const box = $('notebook-list');
+  if (!box) return;
+  box.innerHTML = '';
+  if (Notebook.length === 0) {
+    box.innerHTML = '<div class="notebook-empty">لا توجد أخطاء مسجلة بعد. حل الأسئلة وسيتم حفظ أخطائك هنا للمراجعة لاحقاً.</div>';
+    return;
+  }
+  Notebook.slice().reverse().forEach(item => {
+    const d = document.createElement('div');
+    d.className = 'notebook-item';
+    const dt = new Date(item.date).toLocaleString('ar-SA');
+    d.innerHTML =
+      '<div class="nq">❓ ' + esc(item.q) + '</div>' +
+      '<div class="na">✔ ' + esc(item.right) + '</div>' +
+      '<div class="ns">الدرس: ' + esc(item.lesson) + ' — ' + dt + '</div>';
+    box.appendChild(d);
+  });
+}
+
+/* --------- نقاط الخبرة (XP) والشهادة --------- */
+let TotalXP = 0;
+const XP_KEY = 'aiq_xp';
+function loadXP() {
+  try { TotalXP = parseInt(localStorage.getItem(XP_KEY) || '0', 10); } catch (e) { TotalXP = 0; }
+}
+function saveXP() {
+  try { localStorage.setItem(XP_KEY, String(TotalXP)); } catch (e) {}
+}
+function addXP(amount) {
+  TotalXP += amount;
+  saveXP();
+  $('xp-chip').textContent = '✨ ' + ar(TotalXP);
+}
+function allLessonsCompleted() {
+  const ids = ['l11','l12','l13','l14','l21','l22','l23'];
+  return ids.every(id => getProgress(id).done);
+}
+
+/* ---------- النطق الصوتي (Web Speech API) ---------- */
+let synth = null;
+function initSpeech() {
+  if (typeof speechSynthesis !== 'undefined') synth = window.speechSynthesis;
+}
+function speak(text) {
+  if (!synth || !text) return;
+  try {
+    synth.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'ar-SA';
+    u.rate = 0.9;
+    synth.speak(u);
+  } catch (e) {}
+}
 
 /* ---------- الحالة ---------- */
 const S = {
@@ -130,16 +252,20 @@ function buildHome() {
   $('lv-desc').textContent = LEVEL_DESC[curLevel];
   wrap.innerHTML = '';
   bank.forEach(L => {
+    const prog = getProgress(L.id);
+    const pct = prog.done ? 100 : Math.round((prog.best / 100) * 100);
+    const doneBadge = prog.done ? '<span class="lesson-done">✅ مكتمل</span>' : '';
     const el = document.createElement('button');
     el.className = 'lesson';
     el.style.setProperty('--c', L.color);
     el.innerHTML =
       '<span class="l-chap">فصل ' + L.num.charAt(0) + '</span>' +
       '<div class="l-top"><span class="l-icon">' + L.icon + '</span>' +
-      '<span class="l-num">الدرس ' + L.num + '</span></div>' +
+      '<span class="l-num">الدرس ' + L.num + '</span>' + doneBadge + '</div>' +
       '<div class="l-title">' + L.title + '</div>' +
+      '<div class="lesson-prog"><div class="lesson-prog-fill" style="width:' + pct + '%"></div></div>' +
       '<div class="l-foot"><span class="pill">' + ar(L.questions.length) + ' سؤال</span>' +
-      '<span class="best">اضغط للبدء ▶</span></div>';
+      '<span class="best">أفضل نتيجة: ' + ar(prog.best) + '٪</span></div>';
     el.addEventListener('click', () => startQuiz(L));
     wrap.appendChild(el);
   });
@@ -198,7 +324,7 @@ function startAll() {
 
 /* ---------- التنقل بين الشاشات ---------- */
 function show(name) {
-  ['home', 'quiz', 'result'].forEach(s => $('screen-' + s).classList.toggle('active', s === name));
+  ['home', 'quiz', 'result', 'cert'].forEach(s => $('screen-' + s).classList.toggle('active', s === name));
   scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -215,6 +341,16 @@ function nextQuestion() {
   $('q-counter').textContent = ar(S.i + 1) + ' / ' + ar(S.queue.length);
   $('bar-fill').style.width = ((S.i) / S.queue.length * 100) + '%';
   $('q-text').textContent = q.q;
+  const qt = $('q-text');
+  let spk = qt.parentElement.querySelector('.q-speak');
+  if (!spk) {
+    spk = document.createElement('button');
+    spk.className = 'q-speak';
+    spk.title = 'استمع للنص';
+    qt.parentElement.insertBefore(spk, qt);
+  }
+  spk.textContent = '🔊';
+  spk.onclick = () => speak(q.q);
   $('feedback').className = 'feedback';
   $('btn-next').classList.remove('show');
   $('btn-next').textContent = (S.i === S.queue.length - 1) ? 'إنهاء الامتحان 🏁' : 'التالي ⏭';
@@ -224,6 +360,9 @@ function nextQuestion() {
   S.timer = setInterval(() => {
     S.left -= .25;
     $('timer-fill').style.width = Math.max(0, S.left / CFG.time * 100) + '%';
+    const tf = $('timer-fill');
+    if (S.left <= 5) { tf.style.background = 'var(--bad)'; tf.style.boxShadow = '0 0 12px var(--bad)'; }
+    else { tf.style.background = ''; tf.style.boxShadow = ''; }
     if (S.left <= 0) timeOut(q);
   }, 250);
 }
@@ -469,19 +608,28 @@ function finishAnswer(ok) {
     let pts = CFG.correct * mult;
     const fast = S.left <= CFG.fastTime;
     if (fast) { pts += CFG.speedBonus; S.fast++; }
+    // نقاط الخبرة للإجابة الصحيحة
+    addXP(CFG.xpCorrect);
     S.score += pts;
     fb.className = 'feedback ok show';
     $('fb-title').innerHTML = (fast ? '⚡ إجابة سريعة! ' : '🎉 إجابة صحيحة! ') + '+' + ar(pts) + ' نقطة'
       + (mult > 1 ? ' (مضاعف ×' + ar(mult) + ')' : '');
-    $('fb-body').textContent = S.streak > 1 ? '🔥 سلسلة صحيحة: ' + ar(S.streak) + ' إجابات متتالية!' : 'أحسنت، واصل التقدم 💪';
+    let body = S.streak > 1 ? '🔥 سلسلة صحيحة: ' + ar(S.streak) + ' إجابات متتالية!' : 'أحسنت، واصل التقدم 💪';
+    // عرض الشرح إن وجد
+    if (q.explain) body += ' 💡 ' + q.explain;
+    $('fb-body').textContent = body;
     sfxOk(); celebrate(45);
     chipPop('score-chip', 'pop'); chipPop('streak-chip', 'pop');
   } else {
     S.score = Math.max(0, S.score + CFG.wrong);
     S.streak = 0; S.wrong++;
     S.wrongList.push({ q: q.q, right: rightText(q) });
+    addToNotebook(q.q, rightText(q), S.lesson);
     sfxBad();
     chipPop('score-chip', 'bad-pop');
+    let body = 'راجع السؤال في ملخص الأخطاء 📘';
+    if (q.explain) body += ' — الشرح: ' + q.explain;
+    $('fb-body').textContent = body;
   }
   updateHud();
   $('bar-fill').style.width = ((S.i + 1) / S.queue.length * 100) + '%';
@@ -498,6 +646,7 @@ function chipPop(id, cls) {
 function updateHud() {
   $('score').textContent = ar(S.score);
   $('streak').textContent = ar(S.streak);
+  $('xp-chip').textContent = '✨ <b>' + ar(TotalXP) + '</b>';
 }
 
 /* ---------- النتيجة ---------- */
@@ -547,8 +696,53 @@ function finish() {
 
   sfxEnd();
   celebrate(120);
-  show('result');
+
+  // تحديث التقدم ونقاط الإكمال للدرس الحالي (إذا كان درسًا عاديًا وليس امتحانًا شاملاً/فصلاً)
+  if (S.lesson && S.lesson.id && !String(S.lesson.id).startsWith('ch:') && S.lesson.id !== 'all') {
+    const xpEarned = pct === 100 ? CFG.xpPerfect : (pct >= 80 ? CFG.xpLessonComplete : 25);
+    addXP(xpEarned);
+    updateProgress(S.lesson.id, pct, xpEarned);
+  }
+
+  // إذا اكتملت جميع الدروس، اعرض شهادة الإتمام بدلاً من شاشة النتيجة العادية
+  if (S.lesson && S.lesson.id && !String(S.lesson.id).startsWith('ch:') && S.lesson.id !== 'all' && allLessonsCompleted()) {
+    $('cert-name').textContent = 'طالب / طالبة';
+    $('cert-date').textContent = new Date().toLocaleDateString('ar-SA');
+    $('cert-score').textContent = ar(TotalXP) + ' نقطة خبرة';
+    show('cert');
+  } else {
+    show('result');
+  }
   updateHud();
+}
+
+/* ---------- تصدير الامتحان للطباعة ---------- */
+function exportExam() {
+  if (!S.lesson || S.queue.length === 0) return;
+  const win = window.open('', '_print');
+  const total = S.queue.length;
+  let html = '<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>امتحان — ' + esc(S.lesson.title || 'غير محدد') + '</title>';
+  html += '<style>body{font-family:"Segoe UI","Tahoma","Cairo",sans-serif;direction:rtl;line-height:1.6;padding:20px}';
+  html += 'h1{text-align:center;color:#1a202c}.q{margin-bottom:20px;border-bottom:1px solid #ccc;padding-bottom:10px}';
+  html += '.qnum{font-weight:bold;color:#2c5282}.options{margin-left:20px;margin-bottom:15px}';
+  html += '.opt{display:block;margin:5px 0;padding:8px;border:1px solid #ccc;border-radius:6px;background:#f7fafc}';
+  html += '.answer{margin-top:10px;padding:10px;background:#ebf4ff;border:1px solid #63b3ed;border-radius:6px;color:#2c5282}';
+  html += '.explain{margin-top:5px;font-size:14px;color:#4a5568;font-style:italic}';
+  html += '@media print{body{background:#fff}}</style></head><body>';
+  html += '<h1>امتحان: ' + esc(S.lesson.title || 'غير محدد') + '</h1>';
+  html += '<p>التاريخ: ' + new Date().toLocaleDateString('ar-SA') + ' — عدد الأسئلة: ' + total + '</p>';
+  S.queue.forEach((q, idx) => {
+    html += '<div class="q"><div class="qnum">السؤال ' + (idx + 1) + ':</div> ' + esc(q.q) + '<div class="options">';
+    if (q.o) {
+      q.o.forEach((o, k) => { html += '<div class="opt">' + (k + 1) + '. ' + esc(o) + '</div>'; });
+    }
+    html += '</div><div class="answer">الإجابة الصحيحة: ' + esc(rightText(q)) + '</div>';
+    if (q.explain) html += '<div class="explain">الشرح: ' + esc(q.explain) + '</div>';
+    html += '</div>';
+  });
+  html += '</body></html>';
+  win.document.write(html);
+  win.document.close();
 }
 
 /* ---------- الأحداث ---------- */
@@ -637,6 +831,20 @@ addEventListener('keydown', e => {
   const n = ['١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'].indexOf(e.key);
   if (n >= 0 && $('options').children[n]) { e.preventDefault(); $('options').children[n].click(); }
 });
+
+/* ---------- تهيئة الأنظمة الجديدة ---------- */
+loadProgress();
+loadNotebook();
+loadXP();
+initSpeech();
+applyTheme();
+$('theme-toggle').addEventListener('click', toggleTheme);
+$('btn-notebook-clear').addEventListener('click', () => { clearNotebook(); buildNotebook(); });
+$('btn-notebook-review').addEventListener('click', () => { buildNotebook(); });
+$('btn-export').addEventListener('click', exportExam);
+$('btn-print-preview').addEventListener('click', () => { window.print(); });
+$('btn-cert-print').addEventListener('click', () => { window.print(); });
+$('btn-cert-home').addEventListener('click', () => { buildHome(); show('home'); });
 
 buildHome();
 updateHud();

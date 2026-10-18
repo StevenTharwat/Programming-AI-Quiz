@@ -219,7 +219,9 @@ main{max-width:1150px;margin:0 auto;padding:0 18px}
   padding:26px;box-shadow:var(--shadow);backdrop-filter:blur(10px);
 }
 .q-num{font-size:12px;color:var(--cyan);font-weight:700;letter-spacing:1px;margin-bottom:8px}
-.q-text{font-size:21px;line-height:1.7;margin-bottom:20px}
+.q-text{font-size:21px;line-height:1.7;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between}
+.q-speak{background:var(--card2);border:1px solid var(--line);border-radius:10px;width:34px;height:34px;cursor:pointer;font-size:16px;display:grid;place-items:center;flex-shrink:0;margin-left:10px;transition:.2s}
+.q-speak:hover{border-color:var(--violet);background:rgba(139,92,246,.22)}
 
 .options{display:grid;gap:12px}
 .opt{
@@ -316,7 +318,113 @@ main{max-width:1150px;margin:0 auto;padding:0 18px}
 .rv .rw{font-size:13.5px;color:#fca5a5;text-decoration:line-through}
 .res-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
 
-.foot{text-align:center;color:var(--muted);font-size:12px;margin-top:26px}
+/* ===== الوضع الليلي / الفاتح ===== */
+body.light{
+  --bg:#f5f7fa;
+  --bg2:#ffffff;
+  --card:rgba(0,0,0,.06);
+  --card2:rgba(0,0,0,.04);
+  --line:rgba(0,0,0,.12);
+  --txt:#1a202c;
+  --muted:#4a5568;
+  --ok:#2f855a;
+  --bad:#c53030;
+  --gold:#d69e2e;
+  --violet:#6b46c1;
+  --cyan:#2c7a7b;
+  --shadow:0 10px 30px rgba(0,0,0,.12);
+}
+body.light .bg-orbs{display:none}
+body.light .card, body.light .sum-card, body.light .result-card{
+  background:#ffffff; border:1px solid var(--line); color:var(--txt);
+}
+body.light .chip{background:#f7fafc;color:var(--txt);border-color:var(--line)}
+body.light .chip.on{background:#ebf4ff;color:#2c5282}
+body.light .rv{background:#fff5f5;border-color:#fc8181}
+body.light .rv .ra{color:#276749}
+body.light .rv .rw{color:#c53030}
+body.light .ord-info{background:#ebf4ff;border-color:#90cdf4}
+body.light .cls-row{background:#ffffff;border-color:var(--line)}
+body.light .fill-in{background:#ffffff;color:var(--txt);border-color:var(--line)}
+body.light .feedback.ok{background:#ebf4ff;border-color:#63b3ed;color:var(--txt)}
+body.light .feedback.bad{background:#fff5f5;border-color:#fc8181;color:var(--txt)}
+body.light .feedback.ok .fb-title, body.light .feedback.bad .fb-title{color:var(--txt)}
+body.light .stat{background:#f7fafc;color:var(--txt)}
+body.light .stat b{color:var(--cyan)}
+body.light .stat span{color:var(--muted)}
+body.light .res-msg{color:var(--muted)}
+body.light .review .rv .rq{color:var(--txt)}
+body.light .foot{color:var(--muted)}
+
+/* زر تبديل السمة */
+.theme-toggle{
+  background:var(--card2);border:1px solid var(--line);border-radius:12px;
+  width:40px;height:40px;cursor:pointer;font-size:20px;display:grid;place-items:center;
+  transition:.3s;
+}
+.theme-toggle:hover{border-color:var(--violet);transform:rotate(15deg)}
+
+/* ===== شريط التقدم على بطاقات الدروس ===== */
+.lessons .lesson{position:overflow:hidden}
+.lesson-prog{
+  height:6px;background:rgba(255,255,255,.12);border-radius:3px;
+  margin-top:8px;overflow:hidden;
+}
+.lesson-prog-fill{
+  height:100%;background:linear-gradient(90deg,var(--ok),var(--cyan));
+  width:0%;transition:width .5s ease;
+}
+.lesson-done{
+  position:absolute;top:10px;right:10px;font-size:18px;
+  background:rgba(34,197,94,.2);border-radius:8px;padding:2px 6px;
+}
+
+/* ===== شاشة دفتر الأخطاء ===== */
+.notebook-screen{padding:20px}
+.notebook-screen h2{text-align:center;margin-bottom:20px}
+.notebook-empty{text-align:center;color:var(--muted);padding:40px;font-size:18px}
+.notebook-item{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:16px;margin-bottom:14px;text-align:right;
+}
+.notebook-item .nq{font-weight:700;color:var(--bad);margin-bottom:6px}
+.notebook-item .na{color:var(--ok);margin-bottom:4px}
+.notebook-item .ns{font-size:12px;color:var(--muted)}
+.notebook-btns{display:flex;gap:10px;justify-content:center;margin-top:10px}
+
+/* ===== شهادة الإتمام ===== */
+.cert-screen{text-align:center;padding:30px 20px}
+.cert-frame{
+  max-width:720px;margin:0 auto;border:3px solid var(--gold);
+  border-radius:20px;padding:32px;background:var(--card);
+  position:relative;
+}
+.cert-frame::before{
+  content:"";position:absolute;inset:4px;border:1px dashed var(--line);
+  border-radius:16px;pointer-events:none;
+}
+.cert-title{font-size:28px;color:var(--gold);margin-bottom:8px;letter-spacing:2px}
+.cert-name{font-size:20px;margin:12px 0;color:var(--txt)}
+.cert-date{font-size:14px;color:var(--muted);margin-bottom:24px}
+.cert-score{font-size:32px;font-weight:900;color:var(--ok);margin:10px 0}
+.cert-seal{
+  position:absolute;bottom:20px;right:20px;font-size:48px;
+  opacity:.6;transform:rotate(-12deg);
+}
+.cert-btns{display:flex;gap:12px;justify-content:center;margin-top:24px}
+
+/* ===== طباعة الامتحان ===== */
+@media print{
+  .topbar,.hud,.btn-next,.btn-quit,.btn-home,.btn-retry,.review,
+  .timer,.bar,.foot,.bg-orbs,.fx{display:none !important}
+  body{background:#fff !important;color:#000 !important}
+  .card{background:#fff !important;border:1px solid #000 !important;box-shadow:none !important}
+  .opt,.chip{background:#fff !important;border:1px solid #000 !important;color:#000 !important}
+  .print-only{display:block !important}
+  .no-print{display:none !important}
+  .print-page{page-break-after:always}
+  .print-page:last-child{page-break-after:auto}
+}
 
 @media (max-width:640px){
   .brand-txt small{display:none}

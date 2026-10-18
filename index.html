@@ -23,6 +23,8 @@
   <div class="hud">
     <div class="chip score-chip" id="score-chip">⭐ <b id="score">0</b></div>
     <div class="chip streak-chip" id="streak-chip">🔥 <b id="streak">0</b></div>
+    <div class="chip" id="xp-chip">✨ <b>0</b></div>
+    <button class="theme-toggle" id="theme-toggle" title="تبديل السمة">🌙</button>
   </div>
 </header>
 
@@ -73,6 +75,14 @@
       <div id="sum-lessons" class="sum-grid"></div>
       <h3 class="sum-title">🗂️ نظرة عامة على الفصلين</h3>
       <div id="sum-chapters" class="sum-grid"></div>
+
+      <!-- دفتر الأخطاء -->
+      <h3 class="sum-title">📘 دفتر الأخطاء — مراجعة أخطائك</h3>
+      <div id="notebook-list" class="sum-grid"></div>
+      <div class="notebook-btns" style="margin-top:14px">
+        <button class="btn ghost" id="btn-notebook-clear">مسح دفتر الأخطاء</button>
+        <button class="btn primary" id="btn-notebook-review">مراجعة أخطاء مسجلة</button>
+      </div>
     </div>
   </section>
 
@@ -121,6 +131,28 @@
       <div class="res-btns">
         <button class="btn primary" id="btn-retry">🔄 إعادة المحاولة</button>
         <button class="btn ghost" id="btn-home">🏠 اختيار درس آخر</button>
+        <button class="btn primary" id="btn-export">🖨️ تصدير للطباعة</button>
+        <button class="btn ghost" id="btn-print-preview">معاينة الطباعة</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ شاشة الشهادة ============ -->
+  <section id="screen-cert" class="screen">
+    <div class="cert-screen">
+      <div class="cert-frame">
+        <div class="cert-title">شهادة إتمام</div>
+        <div class="cert-name" id="cert-name">طالب / طالبة</div>
+        <div class="cert-date" id="cert-date"></div>
+        <div class="cert-score" id="cert-score">0 نقطة</div>
+        <div style="font-size:15px;color:var(--muted);margin-bottom:20px">
+          تم إكمال جميع دروس منهج البرمجة والذكاء الاصطناعي — الصف الثاني الثانوي
+        </div>
+        <div class="cert-seal">🏆</div>
+      </div>
+      <div class="cert-btns">
+        <button class="btn primary" id="btn-cert-print">🖨️ طباعة الشهادة</button>
+        <button class="btn ghost" id="btn-cert-home">🏠 العودة للرئيسية</button>
       </div>
     </div>
   </section>
