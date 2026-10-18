@@ -364,6 +364,19 @@ body.light .foot{color:var(--muted)}
 }
 .theme-toggle:hover{border-color:var(--violet);transform:rotate(15deg)}
 
+/* ===== شريط الرأس أثناء الامتحان ===== */
+.quiz-head{
+  display:flex;flex-direction:column;gap:10px;
+  background:var(--card);border:1px solid var(--line);
+  border-radius:var(--radius);padding:16px;margin-bottom:16px;
+  backdrop-filter:blur(10px);box-shadow:var(--shadow);
+}
+.quiz-head .q-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.quiz-head .q-meta{font-size:13px;color:var(--muted)}
+.quiz-head .q-counter{font-weight:700;color:var(--cyan)}
+.quiz-head .q-prog{height:6px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden}
+.quiz-head .q-prog-fill{height:100%;background:linear-gradient(90deg,var(--ok),var(--cyan));width:0%;transition:width .3s ease}
+
 /* ===== شريط التقدم على بطاقات الدروس ===== */
 .lessons .lesson{position:overflow:hidden}
 .lesson-prog{
@@ -434,7 +447,63 @@ body.light .foot{color:var(--muted)}
   .chip{min-width:80px;font-size:14px}
   .chapter-wrap{grid-template-columns:1fr}
   .btn.chapter{font-size:15px}
+.btn.quit{background:rgba(239,68,68,.1);border-color:var(--bad);color:var(--bad)}
+.btn.quit:hover{background:var(--bad);color:#fff}
   .sum-grid{grid-template-columns:1fr}
   .sum-card{padding:16px}
   .home-tab{flex:1;padding:10px 8px;font-size:14px}
+
+  /* ===== شريط التنقل السفلي للموبايل ===== */
+  .bottom-nav{
+    position:fixed;bottom:0;left:0;right:0;
+    display:flex;justify-content:space-around;
+    background:var(--card2);border-top:1px solid var(--line);
+    backdrop-filter:blur(10px);padding:10px 0;z-index:100;
+    box-shadow:0 -6px 20px rgba(0,0,0,.4);
+  }
+  .nav-item{
+    background:none;border:none;color:var(--muted);
+    font-size:22px;width:56px;height:56px;display:grid;place-items:center;
+    border-radius:14px;cursor:pointer;transition:.2s;
+  }
+  .nav-item:hover,.nav-item.active{color:var(--cyan);background:rgba(34,211,238,.12);transform:translateY(-2px)}
+  body.light .nav-item{color:#64748b}
+  body.light .nav-item.active{color:#0ea5e9;background:#e0f2fe}
+
+  /* تحسين الأهداف للمس (minimum 44px) */
+  .btn{min-height:48px;padding:12px 20px;font-size:16px}
+  .home-tab{min-height:52px;padding:12px 8px;font-size:15px}
+  .lv-btn{min-height:64px;padding:12px;font-size:15px}
+  .opt{min-height:52px;padding:14px 12px;font-size:16px}
+  .theme-toggle{width:44px;height:44px;font-size:22px}
+
+  /* شريط إجراء ثابت أثناء الامتحان للموبايل */
+  .quiz-head{position:sticky;top:10px;z-index:50;background:var(--card);padding-bottom:12px}
+  .card #btn-next{
+    width:100%;min-height:56px;font-size:18px;margin-top:14px;
+  }
+
+  /* تحسينات الخط والمسافات على الموبايل */
+  .hero h2{font-size:24px}
+  .sub{font-size:14px}
+  .lesson{padding:14px}
+  .sum-card{font-size:14px;padding:14px}
+  .q-num{font-size:14px}
+  .res-card{padding:20px}
+  .medal{font-size:48px}
+  .res-score{font-size:32px}
+  .cert-frame{padding:24px}
+  .cert-title{font-size:24px}
+  .cert-name{font-size:18px}
+  .cert-score{font-size:28px}
+
+  /* إخفاء الشريط العلوي للأزرار الكبيرة على الموبايل لتقليل الازدحام */
+  .topbar{padding:12px 16px;margin:12px auto}
+  .logo{font-size:26px;width:48px;height:48px}
+  .brand-txt h1{font-size:17px}
+  .chip{font-size:14px;padding:6px 12px;min-width:72px}
+  .chip b{font-size:16px}
+
+  /* إخفاء شريط التنقل السفلي في شاشات الامتحان والشهادة */
+  #screen-quiz .bottom-nav,#screen-cert .bottom-nav,#screen-result .bottom-nav{display:none}
 }

@@ -110,6 +110,7 @@
         <div class="fb-body" id="fb-body"></div>
       </div>
       <button class="btn primary next" id="btn-next">التالي ⏭</button>
+      <button class="btn ghost quit" id="btn-quit">🚪 خروج</button>
     </div>
   </section>
 
@@ -131,8 +132,9 @@
       <div class="res-btns">
         <button class="btn primary" id="btn-retry">🔄 إعادة المحاولة</button>
         <button class="btn ghost" id="btn-home">🏠 اختيار درس آخر</button>
-        <button class="btn primary" id="btn-export">🖨️ تصدير للطباعة</button>
-        <button class="btn ghost" id="btn-print-preview">معاينة الطباعة</button>
+      </div>
+      <div class="res-btns-rescue" style="margin-top:10px">
+        <button class="btn ghost" id="btn-notebook-from-result">📘 مراجعة أخطائك</button>
       </div>
     </div>
   </section>
@@ -153,12 +155,21 @@
       <div class="cert-btns">
         <button class="btn primary" id="btn-cert-print">🖨️ طباعة الشهادة</button>
         <button class="btn ghost" id="btn-cert-home">🏠 العودة للرئيسية</button>
+      <button class="btn ghost" id="btn-cert-notebook">📘 دفتر الأخطاء</button>
       </div>
     </div>
   </section>
 </main>
 
 <footer class="foot">محتوى الأسئلة مبني على نص الكتاب — الفصول الأول والثاني</footer>
+
+<!-- ===== شريط التنقل السفلي للموبايل ===== -->
+<nav class="bottom-nav" id="bottom-nav" hidden>
+  <button class="nav-item nav-home" id="nav-home" title="الرئيسية">🏠</button>
+  <button class="nav-item nav-summaries" id="nav-summaries" title="الملخصات">📚</button>
+  <button class="nav-item nav-notebook" id="nav-notebook" title="دفتر الأخطاء">📘</button>
+  <button class="nav-item nav-stats" id="nav-stats" title="التقدم والإحصائيات">📊</button>
+</nav>
 
 <script src="data-11.js"></script>
 <script src="data-12.js"></script>

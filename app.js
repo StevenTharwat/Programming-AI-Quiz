@@ -325,8 +325,31 @@ function startAll() {
 /* ---------- التنقل بين الشاشات ---------- */
 function show(name) {
   ['home', 'quiz', 'result', 'cert'].forEach(s => $('screen-' + s).classList.toggle('active', s === name));
+  updateBottomNav();
   scrollTo({ top: 0, behavior: 'smooth' });
 }
+
+/* ---------- شريط التنقل السفلي للموبايل ---------- */
+function updateBottomNav() {
+  const nav = $('bottom-nav');
+  const isQuiz = $('screen-quiz').classList.contains('active');
+  const isResult = $('screen-result').classList.contains('active');
+  const isCert = $('screen-cert').classList.contains('active');
+  nav.hidden = isQuiz || isResult || isCert;
+
+  // تحديث حالات التمييز (active)
+  const isHome = $('screen-home').classList.contains('active');
+  const summariesVisible = !$('pane-summaries').hidden;
+  $('nav-home').classList.toggle('active', isHome && !summariesVisible);
+  $('nav-summaries').classList.toggle('active', summariesVisible);
+  $('nav-notebook').classList.toggle('active', false);
+  $('nav-stats').classList.toggle('active', false);
+}
+
+function gotoHome() { buildHome(); show('home'); switchHomeTab('q'); }
+function gotoSummaries() { buildHome(); show('home'); switchHomeTab('s'); }
+function gotoNotebook() { buildHome(); show('home'); switchHomeTab('s'); buildNotebook(); }
+function gotoStats() { buildHome(); show('home'); switchHomeTab('q'); }
 
 /* ---------- السؤال ---------- */
 function nextQuestion() {
@@ -845,6 +868,19 @@ $('btn-export').addEventListener('click', exportExam);
 $('btn-print-preview').addEventListener('click', () => { window.print(); });
 $('btn-cert-print').addEventListener('click', () => { window.print(); });
 $('btn-cert-home').addEventListener('click', () => { buildHome(); show('home'); });
+$('btn-cert-notebook').addEventListener('click', gotoNotebook);
+$('btn-quit').addEventListener('click', () => {
+  if (confirm('هل تريد الخروج من الامتحان الحالي؟ سيتم فقدان تقدمك في هذا السؤال.')) {
+    clearInterval(S.timer); buildHome(); show('home');
+  }
+});
+$('btn-notebook-from-result').addEventListener('click', gotoNotebook);
+
+// شريط التنقل السفلي
+$('nav-home').addEventListener('click', gotoHome);
+$('nav-summaries').addEventListener('click', gotoSummaries);
+$('nav-notebook').addEventListener('click', gotoNotebook);
+$('nav-stats').addEventListener('click', gotoStats);
 
 buildHome();
 updateHud();
