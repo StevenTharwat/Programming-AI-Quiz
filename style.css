@@ -205,7 +205,6 @@ main{max-width:1150px;margin:0 auto;padding:0 18px}
 .btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
 
 /* ===== شاشة السؤال ===== */
-.quiz-head{margin:18px 0 14px}
 .qh-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .qh-title{display:flex;align-items:center;gap:10px;font-weight:700}
 .badge{background:linear-gradient(135deg,#7c3aed,#22d3ee);padding:4px 12px;border-radius:999px;font-size:13px}
@@ -310,6 +309,8 @@ main{max-width:1150px;margin:0 auto;padding:0 18px}
 .stat{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:12px 6px}
 .stat b{display:block;font-size:22px;color:var(--cyan)}
 .stat span{font-size:12px;color:var(--muted)}
+.stat.best-stat{border-color:rgba(251,191,36,.4);background:rgba(251,191,36,.08)}
+.stat.best-stat b{color:var(--gold)}
 
 .review{text-align:right;margin-bottom:20px;display:grid;gap:10px}
 .rv{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.28);border-radius:14px;padding:12px 14px}
@@ -368,17 +369,16 @@ body.light .foot{color:var(--muted)}
 .quiz-head{
   display:flex;flex-direction:column;gap:10px;
   background:var(--card);border:1px solid var(--line);
-  border-radius:var(--radius);padding:16px;margin-bottom:16px;
+  border-radius:var(--radius);padding:16px;margin:18px 0 16px;
   backdrop-filter:blur(10px);box-shadow:var(--shadow);
 }
-.quiz-head .q-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.quiz-head .q-meta{font-size:13px;color:var(--muted)}
-.quiz-head .q-counter{font-weight:700;color:var(--cyan)}
-.quiz-head .q-prog{height:6px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden}
-.quiz-head .q-prog-fill{height:100%;background:linear-gradient(90deg,var(--ok),var(--cyan));width:0%;transition:width .3s ease}
+.quiz-head .qh-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.quiz-head .badge{font-size:13px}
+.quiz-head #q-counter{font-weight:700;color:var(--cyan)}
+.quiz-head .bar-fill{height:100%;background:linear-gradient(90deg,var(--ok),var(--cyan));width:0%;transition:width .3s ease}
 
 /* ===== شريط التقدم على بطاقات الدروس ===== */
-.lessons .lesson{position:overflow:hidden}
+.lessons .lesson{overflow:hidden}
 .lesson-prog{
   height:6px;background:rgba(255,255,255,.12);border-radius:3px;
   margin-top:8px;overflow:hidden;
@@ -447,8 +447,6 @@ body.light .foot{color:var(--muted)}
   .chip{min-width:80px;font-size:14px}
   .chapter-wrap{grid-template-columns:1fr}
   .btn.chapter{font-size:15px}
-.btn.quit{background:rgba(239,68,68,.1);border-color:var(--bad);color:var(--bad)}
-.btn.quit:hover{background:var(--bad);color:#fff}
   .sum-grid{grid-template-columns:1fr}
   .sum-card{padding:16px}
   .home-tab{flex:1;padding:10px 8px;font-size:14px}

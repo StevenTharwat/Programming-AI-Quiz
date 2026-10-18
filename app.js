@@ -105,6 +105,9 @@ function buildNotebook() {
   const box = $('notebook-list');
   if (!box) return;
   box.innerHTML = '';
+  // تحديث عدّاد دفتر الأخطاء على التبويب
+  const tabBtn = $('tabbtn-s');
+  if (tabBtn) tabBtn.textContent = Notebook.length > 0 ? '📚 ملخصات (' + ar(Notebook.length) + ')' : '📚 ملخصات';
   if (Notebook.length === 0) {
     box.innerHTML = '<div class="notebook-empty">لا توجد أخطاء مسجلة بعد. حل الأسئلة وسيتم حفظ أخطائك هنا للمراجعة لاحقاً.</div>';
     return;
@@ -669,7 +672,7 @@ function chipPop(id, cls) {
 function updateHud() {
   $('score').textContent = ar(S.score);
   $('streak').textContent = ar(S.streak);
-  $('xp-chip').textContent = '✨ <b>' + ar(TotalXP) + '</b>';
+  $('xp-chip').innerHTML = '✨ <b>' + ar(TotalXP) + '</b>';
 }
 
 /* ---------- النتيجة ---------- */
@@ -694,7 +697,13 @@ function finish() {
   $('st-correct').textContent = ar(S.correct);
   $('st-wrong').textContent = ar(S.wrong);
   $('st-pct').textContent = ar(pct) + '٪';
-  $('st-best').textContent = ar(S.bestStreak);
+  // تحديث أفضل نتيجة للدرس (قبل عرضها على النتيجة)
+  let bestPct = pct;
+  if (S.lesson && S.lesson.id && !String(S.lesson.id).startsWith('ch:') && S.lesson.id !== 'all') {
+    const prog = getProgress(S.lesson.id);
+    bestPct = Math.max(prog.best, pct);
+  }
+  $('st-best').textContent = ar(bestPct) + '٪';
 
   const rv = $('review');
   rv.innerHTML = '';
@@ -777,7 +786,7 @@ function switchHomeTab(which) {
   $('tabbtn-s').classList.toggle('on', !q);
   $('pane-questions').hidden = !q;
   $('pane-summaries').hidden = q;
-  if (!q) buildSummaries();
+  if (!q) { buildSummaries(); buildNotebook(); }
 }
 function buildSummaries() {
   if (typeof SUMMARIES === 'undefined') return;
@@ -829,7 +838,6 @@ function buildSummaries() {
   }
 }
 $('btn-next').addEventListener('click', () => { S.i++; nextQuestion(); });
-$('btn-quit').addEventListener('click', () => { clearInterval(S.timer); buildHome(); show('home'); });
 $('btn-home').addEventListener('click', () => { buildHome(); show('home'); });
 $('btn-retry').addEventListener('click', () => {
   curLevel = S.level || 1;
@@ -883,4 +891,5 @@ $('nav-notebook').addEventListener('click', gotoNotebook);
 $('nav-stats').addEventListener('click', gotoStats);
 
 buildHome();
+buildNotebook();
 updateHud();
