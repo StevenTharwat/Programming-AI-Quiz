@@ -135,6 +135,58 @@ main{max-width:1150px;margin:0 auto;padding:0 18px}
 .all-wrap{text-align:center;margin:30px 0 10px}
 .hint{color:var(--muted);font-size:12.5px;margin-top:12px}
 
+/* ===== تبويبات الرئيسية (أسئلة | ملخصات) ===== */
+.home-tabs{display:flex;gap:10px;justify-content:center;margin:18px 0 6px;flex-wrap:wrap}
+.home-tab{font-family:inherit;font-size:15px;font-weight:800;cursor:pointer;color:var(--muted);
+  background:var(--card);border:1px solid var(--line);border-radius:999px;padding:10px 26px;transition:.2s}
+.home-tab:hover{color:var(--txt);border-color:var(--violet);transform:translateY(-2px)}
+.home-tab.on{color:#fff;background:linear-gradient(135deg,#7c3aed,#22d3ee);
+  border-color:transparent;box-shadow:0 10px 26px rgba(124,58,237,.4)}
+#tabbtn-s.on{background:linear-gradient(135deg,#059669,#22d3ee);box-shadow:0 10px 26px rgba(5,150,105,.4)}
+
+/* ===== امتحانات الفصول ===== */
+.chapter-wrap{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:22px 0 4px}
+.btn.chapter{font-size:16px;padding:15px 14px;border-color:transparent;color:#fff;position:relative;overflow:hidden}
+.btn.chapter.ch1{background:linear-gradient(135deg,#7c3aed,#4f46e5);box-shadow:0 12px 28px rgba(124,58,237,.35)}
+.btn.chapter.ch2{background:linear-gradient(135deg,#0891b2,#22d3ee);box-shadow:0 12px 28px rgba(8,145,178,.35)}
+.btn.chapter:hover{transform:translateY(-3px);filter:brightness(1.1)}
+
+/* ===== بطاقات الملخصات ===== */
+#pane-summaries{animation:fade .35s ease}
+.sum-title{font-size:19px;margin:24px 0 14px;text-align:center;
+  background:linear-gradient(90deg,#a78bfa,#22d3ee,#34d399);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sum-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+.sum-card{position:relative;overflow:hidden;background:var(--card);border:1px solid var(--line);
+  border-radius:var(--radius);padding:20px;transition:.25s}
+.sum-card::before{content:"";position:absolute;inset:0;opacity:.13;pointer-events:none;
+  background:radial-gradient(circle at 80% 0%,var(--c,#8b5cf6),transparent 60%)}
+.sum-card:hover{transform:translateY(-4px);border-color:var(--c);box-shadow:0 16px 34px rgba(0,0,0,.45)}
+.sum-card.ch-card{border-width:2px}
+.sum-head{display:flex;align-items:center;gap:12px;margin-bottom:12px;position:relative}
+.sum-icon{font-size:30px;width:54px;height:54px;display:grid;place-items:center;flex:0 0 54px;
+  background:rgba(255,255,255,.07);border:1px solid var(--line);border-radius:14px}
+.sum-num{font-size:12px;color:var(--c);font-weight:800}
+.sum-title2{font-size:16px;font-weight:800;line-height:1.6}
+.sum-over{font-size:14px;line-height:1.9;color:var(--txt);background:rgba(255,255,255,.04);
+  border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin-bottom:12px;position:relative}
+.sum-points{list-style:none;display:grid;gap:8px;margin-bottom:12px;position:relative}
+.sum-points li{font-size:13.5px;line-height:1.8;color:var(--muted);padding-right:22px;position:relative}
+.sum-points li::before{content:"✦";position:absolute;right:0;top:0;color:var(--c)}
+.sum-terms{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;position:relative}
+.term-chip{font-size:12.5px;color:var(--txt);background:rgba(255,255,255,.06);
+  border:1px solid var(--line);border-radius:999px;padding:6px 12px;line-height:1.7}
+.term-chip b{color:var(--c)}
+.sum-table-wrap{overflow-x:auto;margin-bottom:12px;position:relative;border-radius:12px;border:1px solid var(--line)}
+.sum-table{width:100%;border-collapse:collapse;font-size:13px;min-width:280px}
+.sum-table th{background:rgba(139,92,246,.2);color:#fff;padding:9px 10px;font-weight:800;white-space:nowrap}
+.sum-table td{padding:8px 10px;border-top:1px solid var(--line);color:var(--muted);line-height:1.7}
+.sum-table tr:nth-child(even) td{background:rgba(255,255,255,.025)}
+.sum-qa{position:relative;display:grid;gap:8px}
+.sum-q{font-size:13.5px;font-weight:800;color:var(--gold);background:rgba(251,191,36,.08);
+  border:1px dashed rgba(251,191,36,.4);border-radius:12px;padding:10px 14px;line-height:1.8}
+.sum-a{font-size:13.5px;color:#86efac;background:rgba(34,197,94,.08);
+  border:1px solid rgba(34,197,94,.3);border-radius:12px;padding:10px 14px;line-height:1.8}
+
 /* ===== الأزرار ===== */
 .btn{
   font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;
@@ -272,4 +324,9 @@ main{max-width:1150px;margin:0 auto;padding:0 18px}
   .res-stats{grid-template-columns:repeat(2,1fr)}
   .card{padding:18px}
   .chip{min-width:80px;font-size:14px}
+  .chapter-wrap{grid-template-columns:1fr}
+  .btn.chapter{font-size:15px}
+  .sum-grid{grid-template-columns:1fr}
+  .sum-card{padding:16px}
+  .home-tab{flex:1;padding:10px 8px;font-size:14px}
 }

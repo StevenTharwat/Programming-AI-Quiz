@@ -34,6 +34,12 @@
       <p class="sub" id="hero-sub"></p>
     </div>
 
+    <div class="home-tabs">
+      <button class="home-tab on" id="tabbtn-q">❓ أسئلة</button>
+      <button class="home-tab" id="tabbtn-s">📚 ملخصات</button>
+    </div>
+
+    <div id="pane-questions">
     <div class="lv-wrap">
       <div class="lv-tabs">
         <button class="lv-btn on" id="lv1-btn"><b>المستوى الأول</b><span>أسئلة الدرس</span></button>
@@ -51,9 +57,22 @@
 
     <div id="lessons" class="lessons"></div>
 
+    <div class="chapter-wrap">
+      <button class="btn chapter ch1" id="btn-ch1">🎓 امتحان الفصل الأول — 1-1..1-4</button>
+      <button class="btn chapter ch2" id="btn-ch2">🛡️ امتحان الفصل الثاني — 2-1..2-3</button>
+    </div>
+
     <div class="all-wrap">
       <button class="btn big primary" id="btn-all">🎮 الامتحان الشامل — كل الدروس</button>
-      <p class="hint">اختر درسًا واحدًا أو ادخل الامتحان الشامل. يمكنك الإجابة بمفاتيح 1 2 3 4 أو النقر.</p>
+      <p class="hint">اختر درسًا واحدًا أو ادخل امتحان فصل أو الامتحان الشامل. يمكنك الإجابة بمفاتيح 1 2 3 4 أو النقر.</p>
+    </div>
+    </div><!-- /pane-questions -->
+
+    <div id="pane-summaries" hidden>
+      <h3 class="sum-title">📚 ملخصات الدروس (٧ دروس)</h3>
+      <div id="sum-lessons" class="sum-grid"></div>
+      <h3 class="sum-title">🗂️ نظرة عامة على الفصلين</h3>
+      <div id="sum-chapters" class="sum-grid"></div>
     </div>
   </section>
 
@@ -125,6 +144,7 @@
 <script src="data2-22.js"></script>
 <script src="data2-23.js"></script>
 <script src="data2-variety.js"></script>
+<script src="summaries.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

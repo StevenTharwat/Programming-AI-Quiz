@@ -15,6 +15,13 @@ function prepare(bank, variety) {
 }
 const BANKS = { 1: prepare(L1, VAR1), 2: prepare(L2, VAR2) };
 
+/* ---------- مجموعات الفصول (ميزة امتحان الفصل) ---------- */
+const CHAPTERS = { ch1: ['l11', 'l12', 'l13', 'l14'], ch2: ['l21', 'l22', 'l23'] };
+const CHAPTER_META = {
+  ch1: { num: 'الفصل الأول — 1-1..1-4', title: 'امتحان الفصل الأول', icon: '🎓', color: '#a78bfa' },
+  ch2: { num: 'الفصل الثاني — 2-1..2-3', title: 'امتحان الفصل الثاني', icon: '🛡️', color: '#22d3ee' }
+};
+
 let curLevel = 1;
 const curBank = () => BANKS[curLevel];
 
@@ -137,6 +144,10 @@ function buildHome() {
     wrap.appendChild(el);
   });
   $('btn-all').textContent = (curLevel === 1 ? '🎓 امتحان شامل' : '🎓 امتحان شامل — المستوى الثاني');
+  // عدّادات امتحانات الفصول حسب المستوى الحالي
+  const chCount = ch => curBank().filter(L => CHAPTERS[ch].includes(L.id)).reduce((a, L) => a + L.questions.length, 0);
+  $('btn-ch1').textContent = '🎓 امتحان الفصل الأول 1-1..1-4 (' + ar(chCount('ch1')) + ' سؤال)';
+  $('btn-ch2').textContent = '🛡️ امتحان الفصل الثاني 2-1..2-3 (' + ar(chCount('ch2')) + ' سؤال)';
 }
 
 /* ---------- بدء الامتحان ---------- */
@@ -148,6 +159,23 @@ function startQuiz(lesson) {
   S.correct = 0; S.wrong = 0; S.fast = 0; S.wrongList = [];
   show('quiz');
   $('q-lesson').textContent = 'الدرس ' + lesson.num;
+  $('q-level').textContent = LEVEL_NAME[curLevel];
+  $('q-level').classList.toggle('lvl2', curLevel === 2);
+  nextQuestion();
+}
+
+function startChapter(ch) {
+  const ids = CHAPTERS[ch] || [];
+  const meta = CHAPTER_META[ch] || { num: ch, title: 'امتحان الفصل', icon: '🎓', color: '#a78bfa' };
+  const mix = shuffle(curBank().filter(L => ids.includes(L.id)).flatMap(L => L.questions));
+  const fake = { id: 'ch:' + ch, num: meta.num, title: meta.title, icon: meta.icon, color: meta.color, questions: mix, chapter: ch };
+  S.lesson = fake;
+  S.level = curLevel;
+  S.queue = shuffle(mix);
+  S.i = 0; S.score = 0; S.streak = 0; S.bestStreak = 0;
+  S.correct = 0; S.wrong = 0; S.fast = 0; S.wrongList = [];
+  show('quiz');
+  $('q-lesson').textContent = meta.title;
   $('q-level').textContent = LEVEL_NAME[curLevel];
   $('q-level').classList.toggle('lvl2', curLevel === 2);
   nextQuestion();
@@ -247,6 +275,8 @@ function renderTf(q) {
 const norm = s => String(s).toLowerCase()
   .replace(/[\u064B-\u0652\u0640]/g, '')
   .replace(/[أإآ]/g, '\u0627').replace(/ى/g, '\u064A').replace(/ة/g, '\u0647')
+  // لا تهتم بحرف التعريف "ال" في بداية كل كلمة (السائل == سائل، السرير == سرير)
+  .replace(/(^|\s)ال/g, '$1')
   .replace(/[^\u0621-\u064Aa-z0-9]/g, '');
 
 function renderFill(q) {
@@ -522,14 +552,79 @@ function finish() {
 }
 
 /* ---------- الأحداث ---------- */
+/* ---------- تبويبات الرئيسية: أسئلة | ملخصات ---------- */
+function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+function switchHomeTab(which) {
+  const q = which !== 's';
+  $('tabbtn-q').classList.toggle('on', q);
+  $('tabbtn-s').classList.toggle('on', !q);
+  $('pane-questions').hidden = !q;
+  $('pane-summaries').hidden = q;
+  if (!q) buildSummaries();
+}
+function buildSummaries() {
+  if (typeof SUMMARIES === 'undefined') return;
+  const box = $('sum-lessons');
+  box.innerHTML = '';
+  ['l11', 'l12', 'l13', 'l14', 'l21', 'l22', 'l23'].forEach(k => {
+    const s = SUMMARIES[k];
+    if (!s) return;
+    const el = document.createElement('article');
+    el.className = 'sum-card';
+    el.style.setProperty('--c', s.color || '#8b5cf6');
+    const terms = (s.keyTerms || []).map(t => '<span class="term-chip"><b>' + esc(t.t) + '</b> — ' + esc(t.d) + '</span>').join('');
+    const pts = (s.points || []).map(p => '<li>' + esc(p) + '</li>').join('');
+    let tbl = '';
+    if (s.table && s.table.headers) {
+      tbl = '<div class="sum-table-wrap"><table class="sum-table"><thead><tr>' +
+        s.table.headers.map(h => '<th>' + esc(h) + '</th>').join('') + '</tr></thead><tbody>' +
+        (s.table.rows || []).map(r => '<tr>' + r.map(c => '<td>' + esc(c) + '</td>').join('') + '</tr>').join('') +
+        '</tbody></table></div>';
+    }
+    el.innerHTML =
+      '<div class="sum-head"><span class="sum-icon">' + esc(s.icon || '📚') + '</span>' +
+      '<div><div class="sum-num">الدرس ' + esc(s.num || k) + '</div>' +
+      '<div class="sum-title2">' + esc(s.title || '') + '</div></div></div>' +
+      '<p class="sum-over">' + esc(s.overview || '') + '</p>' +
+      '<ul class="sum-points">' + pts + '</ul>' +
+      (terms ? '<div class="sum-terms">' + terms + '</div>' : '') + tbl +
+      ((s.mainQ || s.mainA) ? '<div class="sum-qa sum-main"><div class="sum-q">📖 السؤال من الكتاب: ' + esc(s.mainQ || '') + '</div>' +
+      '<div class="sum-a">✅ ' + esc(s.mainA || '') + '</div></div>' : '') +
+      ((s.examQ || s.examA) ? '<div class="sum-qa"><div class="sum-q">❓ ' + esc(s.examQ || '') + '</div>' +
+      '<div class="sum-a">💡 ' + esc(s.examA || '') + '</div></div>' : '');
+    box.appendChild(el);
+  });
+  const cb = $('sum-chapters');
+  cb.innerHTML = '';
+  if (typeof CHAPTER_SUMMARIES !== 'undefined') {
+    ['ch1', 'ch2'].forEach(k => {
+      const c = CHAPTER_SUMMARIES[k];
+      if (!c) return;
+      const d = document.createElement('article');
+      d.className = 'sum-card ch-card';
+      d.style.setProperty('--c', k === 'ch1' ? '#a78bfa' : '#22d3ee');
+      d.innerHTML = '<div class="sum-head"><span class="sum-icon">' + (k === 'ch1' ? '🎓' : '🛡️') + '</span>' +
+        '<div><div class="sum-num">' + esc((c.lessons || []).join('، ')) + '</div>' +
+        '<div class="sum-title2">' + esc(c.title || '') + '</div></div></div>' +
+        '<p class="sum-over">' + esc(c.overview || '') + '</p>';
+      cb.appendChild(d);
+    });
+  }
+}
 $('btn-next').addEventListener('click', () => { S.i++; nextQuestion(); });
 $('btn-quit').addEventListener('click', () => { clearInterval(S.timer); buildHome(); show('home'); });
 $('btn-home').addEventListener('click', () => { buildHome(); show('home'); });
 $('btn-retry').addEventListener('click', () => {
   curLevel = S.level || 1;
-  S.lesson.id === 'all' ? startAll() : startQuiz(S.lesson);
+  if (S.lesson.id === 'all') startAll();
+  else if (String(S.lesson.id).indexOf('ch:') === 0) startChapter(S.lesson.chapter || S.lesson.id.slice(3));
+  else startQuiz(S.lesson);
 });
 $('btn-all').addEventListener('click', startAll);
+$('btn-ch1').addEventListener('click', () => startChapter('ch1'));
+$('btn-ch2').addEventListener('click', () => startChapter('ch2'));
+$('tabbtn-q').addEventListener('click', () => switchHomeTab('q'));
+$('tabbtn-s').addEventListener('click', () => switchHomeTab('s'));
 $('lv1-btn').addEventListener('click', () => { curLevel = 1; buildHome(); });
 $('lv2-btn').addEventListener('click', () => { curLevel = 2; buildHome(); });
 
