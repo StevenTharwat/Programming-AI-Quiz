@@ -136,7 +136,7 @@ function saveXP() {
 function addXP(amount) {
   TotalXP += amount;
   saveXP();
-  $('xp-chip').textContent = '✨ ' + ar(TotalXP);
+  $('xp-chip').innerHTML = '✨ <b>' + ar(TotalXP) + '</b>';
 }
 function allLessonsCompleted() {
   const ids = ['l11','l12','l13','l14','l21','l22','l23'];
