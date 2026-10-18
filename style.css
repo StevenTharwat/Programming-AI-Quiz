@@ -1,5 +1,6 @@
 /* ===== تحدي الذكاء الاصطناعي — التنسيقات ===== */
 :root{
+  color-scheme:dark;
   --bg:#070b16;
   --bg2:#0d1428;
   --card:rgba(255,255,255,.055);
@@ -17,18 +18,40 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
+/* منع تكبير اللمس المزدوج وتأخير النقر على الموبايل */
+button,a,.opt,.lesson,.chip,.lv-btn,.home-tab,.nav-item,.fill-in{touch-action:manipulation}
 body{
   font-family:"Segoe UI","Tahoma","Cairo",system-ui,sans-serif;
-  background:
-    radial-gradient(1200px 700px at 80% -10%, #1e2a5a 0%, transparent 55%),
-    radial-gradient(900px 600px at 10% 110%, #123a4d 0%, transparent 55%),
-    var(--bg);
+  background:var(--bg);
+  background-repeat:no-repeat;
   color:var(--txt);
   min-height:100%;
   overflow-x:hidden;
   padding-bottom:40px;
+  -webkit-tap-highlight-color:transparent;
+  -webkit-text-size-adjust:100%;
+}
+/* خلفية ثابتة تغطي الشاشة كاملة — لا تتكرر ولا تتحرك عند التمرير */
+body::before{
+  content:"";position:fixed;inset:0;z-index:-2;pointer-events:none;
+  background:
+    radial-gradient(1100px 700px at 85% -8%, #24306b 0%, transparent 55%),
+    radial-gradient(900px 620px at 8% 108%, #0f3d55 0%, transparent 55%),
+    radial-gradient(760px 520px at 50% 42%, #35176b 0%, transparent 60%),
+    var(--bg);
+  background-repeat:no-repeat;
+  transition:background .4s ease;
+}
+body.light::before{
+  background:
+    radial-gradient(1100px 700px at 85% -8%, #dbeafe 0%, transparent 55%),
+    radial-gradient(900px 620px at 8% 108%, #ccfbf1 0%, transparent 55%),
+    radial-gradient(760px 520px at 50% 42%, #ede9fe 0%, transparent 60%),
+    var(--bg);
+  background-repeat:no-repeat;
 }
 #fx{position:fixed;inset:0;pointer-events:none;z-index:60}
+.foot{text-align:center;color:var(--muted);font-size:12.5px;padding:22px 16px 6px;line-height:1.8}
 
 /* توهج متحرك */
 .bg-orbs span{
@@ -321,6 +344,7 @@ main{max-width:1150px;margin:0 auto;padding:0 18px}
 
 /* ===== الوضع الليلي / الفاتح ===== */
 body.light{
+  color-scheme:light;
   --bg:#f5f7fa;
   --bg2:#ffffff;
   --card:rgba(0,0,0,.06);
@@ -429,7 +453,7 @@ body.light .foot{color:var(--muted)}
 /* ===== طباعة الامتحان ===== */
 @media print{
   .topbar,.hud,.btn-next,.btn-quit,.btn-home,.btn-retry,.review,
-  .timer,.bar,.foot,.bg-orbs,.fx{display:none !important}
+  .timer,.bar,.foot,.bg-orbs,#fx,.bottom-nav,body::before{display:none !important}
   body{background:#fff !important;color:#000 !important}
   .card{background:#fff !important;border:1px solid #000 !important;box-shadow:none !important}
   .opt,.chip{background:#fff !important;border:1px solid #000 !important;color:#000 !important}
@@ -440,11 +464,14 @@ body.light .foot{color:var(--muted)}
 }
 
 @media (max-width:640px){
+  /* مساحة آمنة أسفل الشاشة حتى لا يختفي المحتوى خلف شريط التنقل، وجانبية للحواف المنحنية */
+  body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
+  main{padding-left:calc(18px + env(safe-area-inset-left));padding-right:calc(18px + env(safe-area-inset-right))}
   .brand-txt small{display:none}
   .q-text{font-size:18px}
   .res-stats{grid-template-columns:repeat(2,1fr)}
   .card{padding:18px}
-  .chip{min-width:80px;font-size:14px}
+  .hud .chip{font-size:14px}
   .chapter-wrap{grid-template-columns:1fr}
   .btn.chapter{font-size:15px}
   .sum-grid{grid-template-columns:1fr}
@@ -452,11 +479,13 @@ body.light .foot{color:var(--muted)}
   .home-tab{flex:1;padding:10px 8px;font-size:14px}
 
   /* ===== شريط التنقل السفلي للموبايل ===== */
-  .bottom-nav{
+  .bottom-nav[hidden]{display:none !important}
+  .bottom-nav:not([hidden]){
     position:fixed;bottom:0;left:0;right:0;
     display:flex;justify-content:space-around;
     background:var(--card2);border-top:1px solid var(--line);
-    backdrop-filter:blur(10px);padding:10px 0;z-index:100;
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    padding:8px 6px calc(8px + env(safe-area-inset-bottom));z-index:100;
     box-shadow:0 -6px 20px rgba(0,0,0,.4);
   }
   .nav-item{
@@ -475,11 +504,17 @@ body.light .foot{color:var(--muted)}
   .opt{min-height:52px;padding:14px 12px;font-size:16px}
   .theme-toggle{width:44px;height:44px;font-size:22px}
 
-  /* شريط إجراء ثابت أثناء الامتحان للموبايل */
-  .quiz-head{position:sticky;top:10px;z-index:50;background:var(--card);padding-bottom:12px}
+  /* شريط إجراء ثابت أثناء الامتحان — أسفل الشريط العلوي مباشرة */
+  .quiz-head{position:sticky;top:calc(80px + env(safe-area-inset-top));z-index:30;
+    background:var(--card);padding-bottom:12px;
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
   .card #btn-next{
     width:100%;min-height:56px;font-size:18px;margin-top:14px;
   }
+  .qh-row{flex-wrap:wrap;gap:8px}
+  .qh-title{flex-wrap:wrap;gap:6px}
+  .quiz-head .badge{font-size:11.5px;padding:3px 9px}
+  .q-speak{width:40px;height:40px}
 
   /* تحسينات الخط والمسافات على الموبايل */
   .hero h2{font-size:24px}
@@ -495,13 +530,47 @@ body.light .foot{color:var(--muted)}
   .cert-name{font-size:18px}
   .cert-score{font-size:28px}
 
-  /* إخفاء الشريط العلوي للأزرار الكبيرة على الموبايل لتقليل الازدحام */
-  .topbar{padding:12px 16px;margin:12px auto}
-  .logo{font-size:26px;width:48px;height:48px}
-  .brand-txt h1{font-size:17px}
-  .chip{font-size:14px;padding:6px 12px;min-width:72px}
-  .chip b{font-size:16px}
+  /* شريط علوي مضغوط يصف في صف واحد حتى على شاشات عرض 360px */
+  .topbar{padding:10px 12px;gap:8px;flex-wrap:wrap;
+    top:calc(8px + env(safe-area-inset-top));
+    margin-left:calc(12px + env(safe-area-inset-left));
+    margin-right:calc(12px + env(safe-area-inset-right))}
+  .brand{gap:8px;min-width:0;flex:1 1 auto}
+  .brand-txt{min-width:0}
+  .logo{font-size:22px;width:40px;height:40px;flex-shrink:0;border-radius:12px}
+  .brand-txt h1{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hud{gap:6px;flex-shrink:0;justify-content:flex-end}
+  .hud .chip{font-size:12.5px;padding:5px 9px;min-width:0;gap:4px;white-space:nowrap}
+  .hud .chip b{font-size:14px}
 
   /* إخفاء شريط التنقل السفلي في شاشات الامتحان والشهادة */
   #screen-quiz .bottom-nav,#screen-cert .bottom-nav,#screen-result .bottom-nav{display:none}
+}
+
+/* ===== هواتف صغيرة جدًا (≤400px) ===== */
+@media (max-width:400px){
+  .lv-btn b{font-size:14px}
+  .lv-btn span{font-size:11px}
+  .legend .lg{font-size:11.5px;padding:6px 10px}
+  .stat b{font-size:19px}
+  .res-score{font-size:40px}
+  .hero h2{font-size:21px}
+  .btn.big{font-size:16px;padding:14px 20px}
+  .hud .chip{font-size:12px;padding:4px 7px}
+  .nav-item{font-size:20px;width:52px;height:52px}
+}
+
+/* ===== لمس: إلغاء تأثيرات hover الثابتة على الأجهزة اللمسية ===== */
+@media (hover:none){
+  .opt:hover:not(.locked),.lesson:hover,.sum-card:hover,.btn:hover,
+  .lv-btn:hover,.home-tab:hover,.chip:hover,.theme-toggle:hover{transform:none}
+}
+
+/* ===== احترام إعداد تقليل الحركة في النظام ===== */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:.01ms !important;animation-iteration-count:1 !important;
+    transition-duration:.01ms !important;
+  }
+  .bg-orbs span{animation:none !important}
 }
