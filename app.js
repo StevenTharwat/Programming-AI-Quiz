@@ -796,7 +796,10 @@ function buildSummaries() {
     const s = SUMMARIES[k];
     if (!s) return;
     const el = document.createElement('article');
-    el.className = 'sum-card';
+    el.className = 'sum-card collapsible';
+    el.tabIndex = 0;
+    el.setAttribute('role', 'button');
+    el.setAttribute('aria-expanded', 'false');
     el.style.setProperty('--c', s.color || '#8b5cf6');
     const terms = (s.keyTerms || []).map(t => '<span class="term-chip"><b>' + esc(t.t) + '</b> — ' + esc(t.d) + '</span>').join('');
     const pts = (s.points || []).map(p => '<li>' + esc(p) + '</li>').join('');
@@ -811,13 +814,15 @@ function buildSummaries() {
       '<div class="sum-head"><span class="sum-icon">' + esc(s.icon || '📚') + '</span>' +
       '<div><div class="sum-num">الدرس ' + esc(s.num || k) + '</div>' +
       '<div class="sum-title2">' + esc(s.title || '') + '</div></div></div>' +
+      '<div class="sum-body">' +
       '<p class="sum-over">' + esc(s.overview || '') + '</p>' +
       '<ul class="sum-points">' + pts + '</ul>' +
       (terms ? '<div class="sum-terms">' + terms + '</div>' : '') + tbl +
       ((s.mainQ || s.mainA) ? '<div class="sum-qa sum-main"><div class="sum-q">📖 السؤال من الكتاب: ' + esc(s.mainQ || '') + '</div>' +
       '<div class="sum-a">✅ ' + esc(s.mainA || '') + '</div></div>' : '') +
       ((s.examQ || s.examA) ? '<div class="sum-qa"><div class="sum-q">❓ ' + esc(s.examQ || '') + '</div>' +
-      '<div class="sum-a">💡 ' + esc(s.examA || '') + '</div></div>' : '');
+      '<div class="sum-a">💡 ' + esc(s.examA || '') + '</div></div>' : '') +
+      '</div>';
     box.appendChild(el);
   });
   const cb = $('sum-chapters');
@@ -837,6 +842,22 @@ function buildSummaries() {
     });
   }
 }
+/* ---------- تطوي/فتح بطاقات الملخصات: النقر على البطاقة يفتحها ويغلقها ---------- */
+function toggleSumCard(card) {
+  const open = card.classList.toggle('open');
+  card.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+document.addEventListener('click', e => {
+  const card = e.target.closest('.sum-card.collapsible');
+  if (card) toggleSumCard(card);
+});
+document.addEventListener('keydown', e => {
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.classList &&
+      e.target.classList.contains('collapsible')) {
+    e.preventDefault();
+    toggleSumCard(e.target);
+  }
+});
 $('btn-next').addEventListener('click', () => { S.i++; nextQuestion(); });
 $('btn-home').addEventListener('click', () => { buildHome(); show('home'); });
 $('btn-retry').addEventListener('click', () => {

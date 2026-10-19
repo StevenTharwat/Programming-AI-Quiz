@@ -19,7 +19,7 @@
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
 /* منع تكبير اللمس المزدوج وتأخير النقر على الموبايل */
-button,a,.opt,.lesson,.chip,.lv-btn,.home-tab,.nav-item,.fill-in{touch-action:manipulation}
+button,a,.opt,.lesson,.chip,.lv-btn,.home-tab,.nav-item,.fill-in,.sum-card{touch-action:manipulation}
 body{
   font-family:"Segoe UI","Tahoma","Cairo",system-ui,sans-serif;
   background:var(--bg);
@@ -209,6 +209,19 @@ main{max-width:1150px;margin:0 auto;padding:0 18px}
   border:1px dashed rgba(251,191,36,.4);border-radius:12px;padding:10px 14px;line-height:1.8}
 .sum-a{font-size:13.5px;color:#86efac;background:rgba(34,197,94,.08);
   border:1px solid rgba(34,197,94,.3);border-radius:12px;padding:10px 14px;line-height:1.8}
+
+/* ===== بطاقات الملخصات القابلة للطي (مطوية افتراضيًا — النقر يفتحها) ===== */
+.sum-card.collapsible{cursor:pointer}
+.sum-card.collapsible .sum-head{cursor:pointer;user-select:none;-webkit-user-select:none;border-radius:12px}
+.sum-card.collapsible .sum-head::after{
+  content:"▼";margin-inline-start:auto;flex-shrink:0;
+  color:var(--c);font-size:12px;transition:transform .25s ease;
+}
+.sum-card.open .sum-head::after{transform:rotate(180deg)}
+.sum-card.collapsible:active .sum-head{opacity:.75}
+.sum-card .sum-body{display:none}
+.sum-card.open .sum-body{display:block;animation:fade .3s ease}
+.sum-card:not(.open) .sum-head{margin-bottom:0}
 
 /* ===== الأزرار ===== */
 .btn{
@@ -459,6 +472,7 @@ body.light .foot{color:var(--muted)}
   .opt,.chip{background:#fff !important;border:1px solid #000 !important;color:#000 !important}
   .print-only{display:block !important}
   .no-print{display:none !important}
+  .sum-card .sum-body{display:block !important}
   .print-page{page-break-after:always}
   .print-page:last-child{page-break-after:auto}
 }
@@ -505,7 +519,7 @@ body.light .foot{color:var(--muted)}
   .theme-toggle{width:44px;height:44px;font-size:22px}
 
   /* شريط إجراء ثابت أثناء الامتحان — أسفل الشريط العلوي مباشرة */
-  .quiz-head{position:sticky;top:calc(80px + env(safe-area-inset-top));z-index:30;
+  .quiz-head{position:sticky;top:calc(126px + env(safe-area-inset-top));z-index:30;
     background:var(--card);padding-bottom:12px;
     backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
   .card #btn-next{
@@ -530,16 +544,16 @@ body.light .foot{color:var(--muted)}
   .cert-name{font-size:18px}
   .cert-score{font-size:28px}
 
-  /* شريط علوي مضغوط يصف في صف واحد حتى على شاشات عرض 360px */
-  .topbar{padding:10px 12px;gap:8px;flex-wrap:wrap;
+  /* الشريط العلوي: الأيقونات في المنتصف على الموبايل */
+  .topbar{padding:10px 12px;gap:8px;flex-direction:column;align-items:center;justify-content:center;
     top:calc(8px + env(safe-area-inset-top));
     margin-left:calc(12px + env(safe-area-inset-left));
     margin-right:calc(12px + env(safe-area-inset-right))}
-  .brand{gap:8px;min-width:0;flex:1 1 auto}
+  .brand{gap:8px;min-width:0;max-width:100%;justify-content:center;flex:0 0 auto}
   .brand-txt{min-width:0}
   .logo{font-size:22px;width:40px;height:40px;flex-shrink:0;border-radius:12px}
   .brand-txt h1{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .hud{gap:6px;flex-shrink:0;justify-content:flex-end}
+  .hud{gap:6px;flex-shrink:0;justify-content:center;flex-wrap:wrap}
   .hud .chip{font-size:12.5px;padding:5px 9px;min-width:0;gap:4px;white-space:nowrap}
   .hud .chip b{font-size:14px}
 
