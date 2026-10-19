@@ -91,6 +91,28 @@
     </div>
   </section>
 
+  <!-- ============ شاشة صفحة الدرس ============ -->
+  <section id="screen-lesson" class="screen">
+    <div class="lesson-nav">
+      <button class="btn ghost" id="btn-lesson-back">→ الرئيسية</button>
+      <div class="lesson-nav-mid">
+        <span class="lesson-nav-icon" id="lesson-nav-icon">📚</span>
+        <div><div class="lesson-nav-num" id="lesson-nav-num"></div>
+        <div class="lesson-nav-title" id="lesson-nav-title"></div></div>
+      </div>
+      <span class="chip" id="lesson-nav-best">🏆 0%</span>
+    </div>
+    <div class="lesson-tabs" id="lesson-tabs">
+      <button data-lt="study" class="on">📖 ذاكر</button>
+      <button data-lt="story">📜 القصة</button>
+      <button data-lt="tricks">🧠 جمل الحفظ</button>
+      <button data-lt="map">🗺️ الخريطة</button>
+      <button data-lt="terms">🔤 مصطلحات</button>
+      <button data-lt="quiz">🎯 اختبر</button>
+    </div>
+    <div id="lesson-body"></div>
+  </section>
+
   <!-- ============ شاشة السؤال ============ -->
   <section id="screen-quiz" class="screen">
     <div class="quiz-head">
@@ -198,6 +220,7 @@
 <script src="data2-23.js"></script>
 <script src="data2-variety.js"></script>
 <script src="summaries.js"></script>
+<script src="lesson-extras.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

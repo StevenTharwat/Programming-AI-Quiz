@@ -243,6 +243,99 @@ function drawFx() {
 }
 requestAnimationFrame(drawFx);
 
+/* ---------- صفحة الدرس الواحدة ---------- */
+let LP = { lesson: null, tab: 'study' };
+const MODE_KEY = 'aiq_mode';
+let StudyMode = 'study';
+try { StudyMode = localStorage.getItem(MODE_KEY) || 'study'; } catch (e) {}
+
+function openLesson(lesson) {
+  if (!lesson) { buildHome(); show('home'); return; }
+  LP.lesson = lesson; LP.tab = 'study';
+  $('lesson-nav-icon').textContent = lesson.icon || '📚';
+  $('lesson-nav-num').textContent = 'الدرس ' + lesson.num + ' — ' + LEVEL_NAME[curLevel];
+  $('lesson-nav-title').textContent = lesson.title;
+  const p = getProgress(lesson.id + '_L' + curLevel);
+  $('lesson-nav-best').textContent = '🏆 ' + ar(p.best) + '٪';
+  document.querySelectorAll('#lesson-tabs button').forEach(b => {
+    b.classList.toggle('on', b.dataset.lt === 'study');
+    b.onclick = () => { LP.tab = b.dataset.lt; document.querySelectorAll('#lesson-tabs button').forEach(x => x.classList.toggle('on', x === b)); renderLessonBody(); };
+  });
+  renderLessonBody();
+  show('lesson');
+}
+function lessonReviewInfo() {
+  const p = getProgress(LP.lesson.id + '_L' + curLevel);
+  if (!p.lastPlayed) return '👋 أهلا بيك! امشي بالترتيب: خريطة 60 ثانية ← القصة ← جمل الحفظ ← اختبر.';
+  const days = Math.floor((Date.now() - p.lastPlayed) / 864e5);
+  if (p.best < 70) return '⚠️ نتيجتك ' + ar(p.best) + '٪ — راجع القصة وجمل الحفظ قبل ما تختبر تاني.';
+  if (days >= 3) return '⏰ عدى ' + ar(days) + ' أيام من غير مراجعة — راجع سريع عشان المعلومة تثبت.';
+  if (p.done) return '✅ ممتاز! قفلت الدرس ده. راجع ليلة الامتحان بس.';
+  return '💪 مستواك ' + ar(p.best) + '٪ — فاضل خطوة وتقفل الدرس.';
+}
+function renderLessonBody() {
+  const L = LP.lesson;
+  if (!L) { buildHome(); show('home'); return; }
+  const sum = SUMMARIES[L.id] || {}, ex = (typeof LESSON_EXTRAS !== 'undefined' ? LESSON_EXTRAS[L.id] : null) || {};
+  const body = $('lesson-body'); body.innerHTML = '';
+  const mk = h => { const d = document.createElement('div'); d.className = 'lp-card'; d.innerHTML = h; body.appendChild(d); return d; };
+  const rm = (ex.roadmap || []).map(r => '<div class="road-item"><b>🗺️ ' + esc(r.t) + '</b><span>' + esc(r.d) + '</span></div>').join('');
+  if (LP.tab === 'study') {
+    mk('<div class="review-alert">' + esc(lessonReviewInfo()) + '</div>');
+    mk('<h3>🗺️ خريطة الدرس في 60 ثانية</h3><div class="road-grid">' + rm + '</div>');
+    mk('<h3>📚 الشرح المختصر</h3><p>' + esc(sum.overview || '') + '</p><ul class="lp-points">' + (sum.points || []).map(p => '<li>' + esc(p) + '</li>').join('') + '</ul>');
+    if (sum.table) mk('<h3>📊 جدول المقارنة — احفظ منه</h3><table class="lp-table"><tr>' + sum.table.headers.map(h => '<th>' + esc(h) + '</th>').join('') + '</tr>' + sum.table.rows.map(r => '<tr>' + r.map(c => '<td>' + esc(c) + '</td>').join('') + '</tr>').join('') + '</table>');
+    const c = mk('<h3>🎯 جاهز تختبر؟</h3><div class="quiz-modes"><div class="mode-row"><button class="mode-btn primary" id="lp-go-quiz">ابدأ الاختبار (' + ar(L.questions.length) + ' سؤال)</button><button class="mode-btn warn" id="lp-go-cram">🔥 ليلة الامتحان (15)</button></div><div class="mode-row"><button class="mode-btn ' + (StudyMode === 'study' ? 'on' : '') + '" id="lp-m-s">📖 حفظ (بدون وقت)</button><button class="mode-btn ' + (StudyMode === 'exam' ? 'on' : '') + '" id="lp-m-e">⏱️ امتحان (بتوقيت)</button></div></div>');
+    c.querySelector('#lp-go-quiz').onclick = () => startQuiz(L);
+    c.querySelector('#lp-go-cram').onclick = () => startCram(L);
+    c.querySelector('#lp-m-s').onclick = () => { StudyMode = 'study'; try { localStorage.setItem(MODE_KEY, 'study'); } catch (e) {} renderLessonBody(); };
+    c.querySelector('#lp-m-e').onclick = () => { StudyMode = 'exam'; try { localStorage.setItem(MODE_KEY, 'exam'); } catch (e) {} renderLessonBody(); };
+  } else if (LP.tab === 'story') {
+    mk('<h3>📜 احفظها بقصة المستر</h3><div class="story-box">' + esc(ex.story || '...') + '</div>');
+    mk('<h3>❓ سؤال الامتحان</h3><div class="qa"><b>س: </b>' + esc(sum.mainQ || '') + '<br><b>ج: </b>' + esc(sum.mainA || '') + '</div><div class="qa"><b>س امتحاني: </b>' + esc(sum.examQ || '') + '<br><b>ج: </b>' + esc(sum.examA || '') + '</div>');
+  } else if (LP.tab === 'tricks') {
+    mk('<h3>🧠 جمل الحفظ — كلام المستر</h3><div class="trick-grid">' + (ex.mnemonics || []).map(m => '<div class="trick"><b>💡 ' + esc(m.t) + '</b><span>' + esc(m.d) + '</span></div>').join('') + '</div>');
+  } else if (LP.tab === 'map') {
+    mk('<h3>🗺️ الخريطة الذهنية</h3><div class="map-wrap">' + (ex.mindmap || []).map(n => '<div class="map-node"><b>📍 ' + esc(n.t) + '</b><div class="map-kids">' + (n.kids || []).map(k => '<span>' + esc(k) + '</span>').join('') + '</div></div>').join('') + '</div>');
+    if (sum.table) mk('<h3>📊 جدول المقارنة</h3><table class="lp-table"><tr>' + sum.table.headers.map(h => '<th>' + esc(h) + '</th>').join('') + '</tr>' + sum.table.rows.map(r => '<tr>' + r.map(c => '<td>' + esc(c) + '</td>').join('') + '</tr>').join('') + '</table>');
+  } else if (LP.tab === 'terms') {
+    const f = mk('<h3>🔤 بطاقات المصطلحات — دوس عشان تقلبها</h3><div class="flash-grid">' + (sum.keyTerms || []).map(k => '<div class="flash" tabindex="0"><div class="flash-inner"><div class="flash-face flash-front">' + esc(k.t) + '</div><div class="flash-face flash-back">' + esc(k.d) + '</div></div></div>').join('') + '</div>');
+    f.querySelectorAll('.flash').forEach(fl => {
+      const flip = () => fl.classList.toggle('flip');
+      fl.addEventListener('click', flip);
+      fl.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flip(); } });
+    });
+  } else if (LP.tab === 'quiz') {
+    const nbCount = Notebook.filter(n => (n.lesson || '').indexOf(L.num) > -1).length;
+    const c = mk('<h3>🎯 اختبر نفسك — ' + ar(L.questions.length) + ' سؤال</h3><div class="quiz-modes"><div class="mode-row"><button class="mode-btn ' + (StudyMode === 'study' ? 'on' : '') + '" id="lp-m-s2">📖 حفظ</button><button class="mode-btn ' + (StudyMode === 'exam' ? 'on' : '') + '" id="lp-m-e2">⏱️ امتحان</button></div><div class="mode-row"><button class="mode-btn primary" id="lp-q-all">ابدأ الدرس كامل</button><button class="mode-btn warn" id="lp-q-cram">🔥 ليلة الامتحان (15)</button></div><div class="mode-row"><button class="mode-btn" id="lp-q-mist">📘 أخطائي (' + ar(nbCount) + ')</button></div><p style="font-size:13px;color:var(--muted)">الحفظ: بدون وقت وبدون نقص ومع شرح. الامتحان: 30 ثانية و−٥ على الغلط.</p></div>');
+    c.querySelector('#lp-q-all').onclick = () => startQuiz(L);
+    c.querySelector('#lp-q-cram').onclick = () => startCram(L);
+    c.querySelector('#lp-q-mist').onclick = () => startMistakes(L);
+    c.querySelector('#lp-m-s2').onclick = () => { StudyMode = 'study'; try { localStorage.setItem(MODE_KEY, 'study'); } catch (e) {} renderLessonBody(); };
+    c.querySelector('#lp-m-e2').onclick = () => { StudyMode = 'exam'; try { localStorage.setItem(MODE_KEY, 'exam'); } catch (e) {} renderLessonBody(); };
+  }
+}
+function startCram(lesson) {
+  const scored = lesson.questions.map(q => ({ q, s: (q.explain ? 2 : 0) + (q.t ? 1 : 0) + Math.random() }));
+  scored.sort((a, b) => b.s - a.s);
+  const pick = scored.slice(0, Math.min(15, lesson.questions.length)).map(x => x.q);
+  const fake = { id: lesson.id + '_cram', num: lesson.num + ' 🔥', title: lesson.title + ' — ليلة الامتحان', icon: '🔥', color: lesson.color, questions: pick };
+  S.lesson = fake; S.level = curLevel; S.queue = shuffle(pick.slice());
+  S.i = 0; S.score = 0; S.streak = 0; S.bestStreak = 0; S.correct = 0; S.wrong = 0; S.fast = 0; S.wrongList = [];
+  show('quiz'); $('q-lesson').textContent = '🔥 ' + lesson.num; $('q-level').textContent = LEVEL_NAME[curLevel]; $('q-level').classList.toggle('lvl2', curLevel === 2);
+  nextQuestion();
+}
+function startMistakes(lesson) {
+  const mine = Notebook.filter(n => (n.lesson || '').indexOf(lesson.num) > -1);
+  if (!mine.length) { alert('لسه مغلطتش في الدرس ده — ابدأ الاختبار الأول 💪'); return startQuiz(lesson); }
+  const qs = mine.slice(-20).map(n => ({ q: n.q, o: ['✅ ' + n.right, '❌ راجع الملخص والقصة'], a: 0 }));
+  const fake = { id: lesson.id + '_mist', num: lesson.num + ' 📘', title: lesson.title + ' — أخطائي', icon: '📘', color: lesson.color, questions: qs };
+  S.lesson = fake; S.level = curLevel; S.queue = shuffle(qs.slice());
+  S.i = 0; S.score = 0; S.streak = 0; S.bestStreak = 0; S.correct = 0; S.wrong = 0; S.fast = 0; S.wrongList = [];
+  show('quiz'); $('q-lesson').textContent = '📘 ' + lesson.num; $('q-level').textContent = LEVEL_NAME[curLevel]; $('q-level').classList.toggle('lvl2', curLevel === 2);
+  nextQuestion();
+}
+
 /* ---------- شاشة البداية ---------- */
 function buildHome() {
   const wrap = $('lessons');
@@ -269,7 +362,7 @@ function buildHome() {
       '<div class="lesson-prog"><div class="lesson-prog-fill" style="width:' + pct + '%"></div></div>' +
       '<div class="l-foot"><span class="pill">' + ar(L.questions.length) + ' سؤال</span>' +
       '<span class="best">أفضل نتيجة: ' + ar(prog.best) + '٪</span></div>';
-    el.addEventListener('click', () => startQuiz(L));
+    el.addEventListener('click', () => openLesson(L));
     wrap.appendChild(el);
   });
   $('btn-all').textContent = (curLevel === 1 ? '🎓 امتحان شامل' : '🎓 امتحان شامل — المستوى الثاني');
@@ -283,7 +376,7 @@ function buildHome() {
 function startQuiz(lesson) {
   S.lesson = lesson;
   S.level = curLevel;
-  S.queue = shuffle(lesson.questions);
+  S.queue = shuffle(lesson.questions.slice());
   S.i = 0; S.score = 0; S.streak = 0; S.bestStreak = 0;
   S.correct = 0; S.wrong = 0; S.fast = 0; S.wrongList = [];
   show('quiz');
@@ -327,7 +420,7 @@ function startAll() {
 
 /* ---------- التنقل بين الشاشات ---------- */
 function show(name) {
-  ['home', 'quiz', 'result', 'cert'].forEach(s => $('screen-' + s).classList.toggle('active', s === name));
+  ['home', 'lesson', 'quiz', 'result', 'cert'].forEach(s => { const el = $('screen-' + s); if (el) el.classList.toggle('active', s === name); });
   updateBottomNav();
   scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -338,7 +431,8 @@ function updateBottomNav() {
   const isQuiz = $('screen-quiz').classList.contains('active');
   const isResult = $('screen-result').classList.contains('active');
   const isCert = $('screen-cert').classList.contains('active');
-  nav.hidden = isQuiz || isResult || isCert;
+  const isLesson = $('screen-lesson').classList.contains('active');
+  nav.hidden = isQuiz || isResult || isCert || isLesson;
 
   // تحديث حالات التمييز (active)
   const isHome = $('screen-home').classList.contains('active');
@@ -383,6 +477,12 @@ function nextQuestion() {
 
   renderQ(q);
 
+  // وضع الحفظ: بدون مؤقت — وضع الامتحان: مؤقت 30 ثانية
+  clearInterval(S.timer);
+  if (StudyMode === 'study' && S.lesson && S.lesson.id && !String(S.lesson.id).startsWith('ch:') && S.lesson.id !== 'all' && String(S.lesson.id).indexOf('_') === -1) {
+    $('timer-fill').style.width = '100%';
+    return;
+  }
   S.timer = setInterval(() => {
     S.left -= .25;
     $('timer-fill').style.width = Math.max(0, S.left / CFG.time * 100) + '%';
@@ -623,6 +723,31 @@ function choose(pick, correctIdx, q) {
 }
 
 /* ---------- تطبيق النتيجة ---------- */
+function smartExplain(q) {
+  // شرح تلقائي: explain إن وجد، وإلا من الملخص/جمل الحفظ المرتبطة بالدرس
+  if (q.explain) return q.explain;
+  if (q.fix) return q.fix;
+  try {
+    const id = (S.lesson && S.lesson.id ? String(S.lesson.id).split('_')[0] : '');
+    const sum = (typeof SUMMARIES !== 'undefined' ? SUMMARIES[id] : null) || {};
+    const kt = (sum.keyTerms || []).find(k => q.q && q.q.indexOf(k.t) > -1);
+    if (kt) return kt.t + ': ' + kt.d;
+  } catch (e) {}
+  return '';
+}
+function smartTip(q) {
+  try {
+    const id = (S.lesson && S.lesson.id ? String(S.lesson.id).split('_')[0] : '');
+    const ex = (typeof LESSON_EXTRAS !== 'undefined' ? LESSON_EXTRAS[id] : null) || {};
+    const all = (ex.mnemonics || []);
+    for (let i = 0; i < all.length; i++) {
+      const words = String(all[i].t).split(/[\s:،-]+/).filter(w => w.length > 2);
+      if (words.some(w => q.q && q.q.indexOf(w) > -1)) return all[i];
+    }
+    if (all.length) return all[0];
+  } catch (e) {}
+  return null;
+}
 function finishAnswer(ok) {
   const q = S.queue[S.i];
   const fb = $('feedback');
@@ -641,9 +766,12 @@ function finishAnswer(ok) {
     $('fb-title').innerHTML = (fast ? '⚡ إجابة سريعة! ' : '🎉 إجابة صحيحة! ') + '+' + ar(pts) + ' نقطة'
       + (mult > 1 ? ' (مضاعف ×' + ar(mult) + ')' : '');
     let body = S.streak > 1 ? '🔥 سلسلة صحيحة: ' + ar(S.streak) + ' إجابات متتالية!' : 'أحسنت، واصل التقدم 💪';
-    // عرض الشرح إن وجد
-    if (q.explain) body += ' 💡 ' + q.explain;
-    $('fb-body').textContent = body;
+    // شرح المستر + جملة الحفظ لكل إجابة (فكرة 5 و 8)
+    const ex = smartExplain(q), tip = smartTip(q);
+    if (ex) body += ' 💡 ليه؟ ' + ex;
+    if (tip) body += ' 🧠 للحفظ: ' + tip.t + ' — ' + tip.d;
+    const fbBody = $('fb-body');
+    fbBody.textContent = body;
     sfxOk(); celebrate(45);
     chipPop('score-chip', 'pop'); chipPop('streak-chip', 'pop');
   } else {
@@ -654,8 +782,11 @@ function finishAnswer(ok) {
     sfxBad();
     chipPop('score-chip', 'bad-pop');
     let body = 'راجع السؤال في ملخص الأخطاء 📘';
-    if (q.explain) body += ' — الشرح: ' + q.explain;
-    $('fb-body').textContent = body;
+    const ex2 = smartExplain(q), tip2 = smartTip(q);
+    if (ex2) body += ' — ليه؟ ' + ex2;
+    if (tip2) body += ' — 🧠 للحفظ: ' + tip2.t;
+    const fbBody2 = $('fb-body');
+    fbBody2.textContent = body;
   }
   updateHud();
   $('bar-fill').style.width = ((S.i + 1) / S.queue.length * 100) + '%';
@@ -733,7 +864,9 @@ function finish() {
   if (S.lesson && S.lesson.id && !String(S.lesson.id).startsWith('ch:') && S.lesson.id !== 'all') {
     const xpEarned = pct === 100 ? CFG.xpPerfect : (pct >= 80 ? CFG.xpLessonComplete : 25);
     addXP(xpEarned);
-    updateProgress(S.lesson.id, pct, xpEarned);
+    // حفظ التقدم على الدرس الأصلي (حتى لو امتحان فرعي cram/mist)
+    const saveId = String(S.lesson.id).split('_')[0] + '_L' + S.level;
+    updateProgress(saveId, pct, xpEarned);
   }
 
   // إذا اكتملت جميع الدروس، اعرض شهادة الإتمام بدلاً من شاشة النتيجة العادية
@@ -859,11 +992,14 @@ document.addEventListener('keydown', e => {
   }
 });
 $('btn-next').addEventListener('click', () => { S.i++; nextQuestion(); });
-$('btn-home').addEventListener('click', () => { buildHome(); show('home'); });
+$('btn-home').addEventListener('click', () => { if (LP.lesson) { openLesson(LP.lesson); } else { buildHome(); show('home'); } });
+$('btn-lesson-back').addEventListener('click', () => { buildHome(); show('home'); });
 $('btn-retry').addEventListener('click', () => {
   curLevel = S.level || 1;
   if (S.lesson.id === 'all') startAll();
   else if (String(S.lesson.id).indexOf('ch:') === 0) startChapter(S.lesson.chapter || S.lesson.id.slice(3));
+  else if (String(S.lesson.id).indexOf('_cram') > -1) startCram(LP.lesson || S.lesson);
+  else if (String(S.lesson.id).indexOf('_mist') > -1) startMistakes(LP.lesson || S.lesson);
   else startQuiz(S.lesson);
 });
 $('btn-all').addEventListener('click', startAll);
@@ -885,32 +1021,51 @@ addEventListener('keydown', e => {
 });
 
 /* ---------- تهيئة الأنظمة الجديدة ---------- */
+function on(id, ev, fn) { const el = $(id); if (el) el.addEventListener(ev, fn); }
+on('btn-next', 'click', () => { S.i++; nextQuestion(); });
+on('btn-home', 'click', () => { if (LP.lesson) { openLesson(LP.lesson); } else { buildHome(); show('home'); } });
+on('btn-lesson-back', 'click', () => { buildHome(); show('home'); });
+on('btn-retry', 'click', () => {
+  curLevel = S.level || 1;
+  if (!S.lesson) { buildHome(); show('home'); return; }
+  if (S.lesson.id === 'all') startAll();
+  else if (String(S.lesson.id).indexOf('ch:') === 0) startChapter(S.lesson.chapter || S.lesson.id.slice(3));
+  else if (String(S.lesson.id).indexOf('_cram') > -1) startCram(LP.lesson || S.lesson);
+  else if (String(S.lesson.id).indexOf('_mist') > -1) startMistakes(LP.lesson || S.lesson);
+  else startQuiz(S.lesson);
+});
+on('btn-all', 'click', startAll);
+on('btn-ch1', 'click', () => startChapter('ch1'));
+on('btn-ch2', 'click', () => startChapter('ch2'));
+on('tabbtn-q', 'click', () => switchHomeTab('q'));
+on('tabbtn-s', 'click', () => switchHomeTab('s'));
+on('lv1-btn', 'click', () => { curLevel = 1; buildHome(); });
+on('lv2-btn', 'click', () => { curLevel = 2; buildHome(); });
+on('theme-toggle', 'click', toggleTheme);
+on('btn-notebook-clear', 'click', () => { clearNotebook(); buildNotebook(); });
+on('btn-notebook-review', 'click', () => { buildNotebook(); });
+on('btn-export', 'click', exportExam);
+on('btn-print-preview', 'click', () => { window.print(); });
+on('btn-cert-print', 'click', () => { window.print(); });
+on('btn-cert-home', 'click', () => { buildHome(); show('home'); });
+on('btn-cert-notebook', 'click', gotoNotebook);
+on('btn-quit', 'click', () => {
+  if (confirm('هل تريد الخروج من الامتحان الحالي؟ سيتم فقدان تقدمك في هذا السؤال.')) {
+    clearInterval(S.timer);
+    if (LP.lesson) openLesson(LP.lesson); else { buildHome(); show('home'); }
+  }
+});
+on('btn-notebook-from-result', 'click', gotoNotebook);
+on('nav-home', 'click', gotoHome);
+on('nav-summaries', 'click', gotoSummaries);
+on('nav-notebook', 'click', gotoNotebook);
+on('nav-stats', 'click', gotoStats);
+
 loadProgress();
 loadNotebook();
 loadXP();
 initSpeech();
 applyTheme();
-$('theme-toggle').addEventListener('click', toggleTheme);
-$('btn-notebook-clear').addEventListener('click', () => { clearNotebook(); buildNotebook(); });
-$('btn-notebook-review').addEventListener('click', () => { buildNotebook(); });
-$('btn-export').addEventListener('click', exportExam);
-$('btn-print-preview').addEventListener('click', () => { window.print(); });
-$('btn-cert-print').addEventListener('click', () => { window.print(); });
-$('btn-cert-home').addEventListener('click', () => { buildHome(); show('home'); });
-$('btn-cert-notebook').addEventListener('click', gotoNotebook);
-$('btn-quit').addEventListener('click', () => {
-  if (confirm('هل تريد الخروج من الامتحان الحالي؟ سيتم فقدان تقدمك في هذا السؤال.')) {
-    clearInterval(S.timer); buildHome(); show('home');
-  }
-});
-$('btn-notebook-from-result').addEventListener('click', gotoNotebook);
-
-// شريط التنقل السفلي
-$('nav-home').addEventListener('click', gotoHome);
-$('nav-summaries').addEventListener('click', gotoSummaries);
-$('nav-notebook').addEventListener('click', gotoNotebook);
-$('nav-stats').addEventListener('click', gotoStats);
-
 buildHome();
 buildNotebook();
 updateHud();
