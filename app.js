@@ -277,6 +277,11 @@ function renderLessonBody() {
   const L = LP.lesson;
   if (!L) { buildHome(); show('home'); return; }
   const sum = SUMMARIES[L.id] || {}, ex = (typeof LESSON_EXTRAS !== 'undefined' ? LESSON_EXTRAS[L.id] : null) || {};
+  // إظهار التبويب المختار في منتصف الشريط على الموبايل
+  try {
+    const on = document.querySelector('#lesson-tabs button.on');
+    if (on && on.scrollIntoView) on.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+  } catch (e) {}
   const body = $('lesson-body'); body.innerHTML = '';
   const mk = h => { const d = document.createElement('div'); d.className = 'lp-card'; d.innerHTML = h; body.appendChild(d); return d; };
   const rm = (ex.roadmap || []).map(r => '<div class="road-item"><b>🗺️ ' + esc(r.t) + '</b><span>' + esc(r.d) + '</span></div>').join('');
@@ -428,19 +433,18 @@ function show(name) {
 /* ---------- شريط التنقل السفلي للموبايل ---------- */
 function updateBottomNav() {
   const nav = $('bottom-nav');
-  const isQuiz = $('screen-quiz').classList.contains('active');
-  const isResult = $('screen-result').classList.contains('active');
-  const isCert = $('screen-cert').classList.contains('active');
-  const isLesson = $('screen-lesson').classList.contains('active');
-  nav.hidden = isQuiz || isResult || isCert || isLesson;
+  if (!nav) return;
+  // الشريط السفلي يظهر فقط في الرئيسية (home) — مخفي في الدرس والامتحان والنتيجة والشهادة
+  const activeScreen = document.querySelector('.screen.active');
+  const activeId = activeScreen ? activeScreen.id : 'screen-home';
+  nav.hidden = activeId !== 'screen-home';
 
   // تحديث حالات التمييز (active)
-  const isHome = $('screen-home').classList.contains('active');
   const summariesVisible = !$('pane-summaries').hidden;
-  $('nav-home').classList.toggle('active', isHome && !summariesVisible);
-  $('nav-summaries').classList.toggle('active', summariesVisible);
-  $('nav-notebook').classList.toggle('active', false);
-  $('nav-stats').classList.toggle('active', false);
+  if ($('nav-home')) $('nav-home').classList.toggle('active', !summariesVisible);
+  if ($('nav-summaries')) $('nav-summaries').classList.toggle('active', summariesVisible);
+  if ($('nav-notebook')) $('nav-notebook').classList.toggle('active', false);
+  if ($('nav-stats')) $('nav-stats').classList.toggle('active', false);
 }
 
 function gotoHome() { buildHome(); show('home'); switchHomeTab('q'); }
