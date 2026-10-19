@@ -52,6 +52,9 @@ body.light::before{
 }
 #fx{position:fixed;inset:0;pointer-events:none;z-index:60}
 .foot{text-align:center;color:var(--muted);font-size:12.5px;padding:22px 16px 6px;line-height:1.8}
+.foot b{color:var(--txt)}
+.foot a{color:var(--cyan);font-weight:700;text-decoration:none}
+.foot a:hover{text-decoration:underline}
 
 /* توهج متحرك */
 .bg-orbs span{
@@ -457,6 +460,10 @@ body.light .foot{color:var(--muted)}
 .cert-name{font-size:20px;margin:12px 0;color:var(--txt)}
 .cert-date{font-size:14px;color:var(--muted);margin-bottom:24px}
 .cert-score{font-size:32px;font-weight:900;color:var(--ok);margin:10px 0}
+.cert-teacher{font-size:14px;color:var(--muted);margin-bottom:10px}
+.cert-teacher b{color:var(--txt)}
+.cert-teacher a{color:var(--gold);font-weight:800;text-decoration:none;margin-inline-start:4px}
+.cert-teacher a:hover{text-decoration:underline}
 .cert-seal{
   position:absolute;bottom:20px;right:20px;font-size:48px;
   opacity:.6;transform:rotate(-12deg);
