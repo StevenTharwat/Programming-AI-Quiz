@@ -1,26 +1,37 @@
-/* ===== منطق لعبة تحدي الذكاء الاصطناعي ===== */
-'use strict';
+/* ===== منطق لعبة تحدي الذكاء الاصطناعي — المحرك (engine) =====
+   المحتوى كله يأتي من content/*.json عبر ContentLoader في بداية التشغيل.
+   لا يوجد أي سؤال أو قصة أو ملخص داخل هذا الملف. */
 
-const L1 = [LESSON_11, LESSON_12, LESSON_13, LESSON_14, LESSON_21, LESSON_22, LESSON_23];
-const L2 = [L2_11, L2_12, L2_13, L2_14, L2_21, L2_22, L2_23];
-
-// بنك الأسئلة متنوعة الأنواع لكل مستوى
-const VAR1 = VARIETY;
-const VAR2 = (typeof L2_VARIETY !== 'undefined') ? L2_VARIETY : [];
+/* ---------- المحتوى (يُملأ من JSON عند الإقلاع) ---------- */
+let L1 = [], L2 = [], VAR1 = [], VAR2 = [];
+let SUMMARIES = {}, CHAPTER_SUMMARIES = {};
+let CHAPTERS = {}, CHAPTER_META = {};
+let LESSON_EXTRAS = {};
+let CONTENT_SOURCE = 'loading';
+let CONTENT_CHECK = null;
 
 // ندمج الأسئلة متنوعة الأنواع داخل كل درس
 function prepare(bank, variety) {
   bank.forEach(L => { L.questions = L.questions.concat(variety.filter(v => v.L === L.id)); });
   return bank;
 }
-const BANKS = { 1: prepare(L1, VAR1), 2: prepare(L2, VAR2) };
+let BANKS = { 1: [], 2: [] };
 
-/* ---------- مجموعات الفصول (ميزة امتحان الفصل) ---------- */
-const CHAPTERS = { ch1: ['l11', 'l12', 'l13', 'l14'], ch2: ['l21', 'l22', 'l23'] };
-const CHAPTER_META = {
-  ch1: { num: 'الفصل الأول — 1-1..1-4', title: 'امتحان الفصل الأول', icon: '🎓', color: '#a78bfa' },
-  ch2: { num: 'الفصل الثاني — 2-1..2-3', title: 'امتحان الفصل الثاني', icon: '🛡️', color: '#22d3ee' }
-};
+function applyContent(d) {
+  L1 = d.L1; L2 = d.L2; VAR1 = d.VAR1; VAR2 = d.VAR2;
+  SUMMARIES = d.SUMMARIES;
+  CHAPTERS = d.CHAPTERS; CHAPTER_META = d.CHAPTER_META;
+  CHAPTER_SUMMARIES = d.CHAPTER_SUMMARIES || {};
+  LESSON_EXTRAS = d.EXTRAS || {};
+  CONTENT_SOURCE = d.source || 'json';
+  BANKS = { 1: prepare(L1, VAR1), 2: prepare(L2, VAR2) };
+  try {
+    CONTENT_CHECK = {
+      l1: L1.reduce((a, L) => a + L.questions.length, 0),
+      l2: L2.reduce((a, L) => a + L.questions.length, 0)
+    };
+  } catch (e) { CONTENT_CHECK = null; }
+}
 
 let curLevel = 1;
 const curBank = () => BANKS[curLevel];
@@ -276,7 +287,7 @@ function lessonReviewInfo() {
 function renderLessonBody() {
   const L = LP.lesson;
   if (!L) { buildHome(); show('home'); return; }
-  const sum = SUMMARIES[L.id] || {}, ex = (typeof LESSON_EXTRAS !== 'undefined' ? LESSON_EXTRAS[L.id] : null) || {};
+  const sum = SUMMARIES[L.id] || {}, ex = LESSON_EXTRAS[L.id] || {};
   // إظهار التبويب المختار في منتصف الشريط على الموبايل
   try {
     const on = document.querySelector('#lesson-tabs button.on');
@@ -733,7 +744,7 @@ function smartExplain(q) {
   if (q.fix) return q.fix;
   try {
     const id = (S.lesson && S.lesson.id ? String(S.lesson.id).split('_')[0] : '');
-    const sum = (typeof SUMMARIES !== 'undefined' ? SUMMARIES[id] : null) || {};
+    const sum = SUMMARIES[id] || {};
     const kt = (sum.keyTerms || []).find(k => q.q && q.q.indexOf(k.t) > -1);
     if (kt) return kt.t + ': ' + kt.d;
   } catch (e) {}
@@ -742,7 +753,7 @@ function smartExplain(q) {
 function smartTip(q) {
   try {
     const id = (S.lesson && S.lesson.id ? String(S.lesson.id).split('_')[0] : '');
-    const ex = (typeof LESSON_EXTRAS !== 'undefined' ? LESSON_EXTRAS[id] : null) || {};
+    const ex = LESSON_EXTRAS[id] || {};
     const all = (ex.mnemonics || []);
     for (let i = 0; i < all.length; i++) {
       const words = String(all[i].t).split(/[\s:،-]+/).filter(w => w.length > 2);
@@ -926,7 +937,6 @@ function switchHomeTab(which) {
   if (!q) { buildSummaries(); buildNotebook(); }
 }
 function buildSummaries() {
-  if (typeof SUMMARIES === 'undefined') return;
   const box = $('sum-lessons');
   box.innerHTML = '';
   ['l11', 'l12', 'l13', 'l14', 'l21', 'l22', 'l23'].forEach(k => {
@@ -964,10 +974,9 @@ function buildSummaries() {
   });
   const cb = $('sum-chapters');
   cb.innerHTML = '';
-  if (typeof CHAPTER_SUMMARIES !== 'undefined') {
-    ['ch1', 'ch2'].forEach(k => {
-      const c = CHAPTER_SUMMARIES[k];
-      if (!c) return;
+  ['ch1', 'ch2'].forEach(k => {
+    const c = CHAPTER_SUMMARIES[k];
+    if (!c) return;
       const d = document.createElement('article');
       d.className = 'sum-card ch-card';
       d.style.setProperty('--c', k === 'ch1' ? '#a78bfa' : '#22d3ee');
@@ -976,8 +985,7 @@ function buildSummaries() {
         '<div class="sum-title2">' + esc(c.title || '') + '</div></div></div>' +
         '<p class="sum-over">' + esc(c.overview || '') + '</p>';
       cb.appendChild(d);
-    });
-  }
+  });
 }
 /* ---------- تطوي/فتح بطاقات الملخصات: النقر على البطاقة يفتحها ويغلقها ---------- */
 function toggleSumCard(card) {
@@ -995,25 +1003,6 @@ document.addEventListener('keydown', e => {
     toggleSumCard(e.target);
   }
 });
-$('btn-next').addEventListener('click', () => { S.i++; nextQuestion(); });
-$('btn-home').addEventListener('click', () => { if (LP.lesson) { openLesson(LP.lesson); } else { buildHome(); show('home'); } });
-$('btn-lesson-back').addEventListener('click', () => { buildHome(); show('home'); });
-$('btn-retry').addEventListener('click', () => {
-  curLevel = S.level || 1;
-  if (S.lesson.id === 'all') startAll();
-  else if (String(S.lesson.id).indexOf('ch:') === 0) startChapter(S.lesson.chapter || S.lesson.id.slice(3));
-  else if (String(S.lesson.id).indexOf('_cram') > -1) startCram(LP.lesson || S.lesson);
-  else if (String(S.lesson.id).indexOf('_mist') > -1) startMistakes(LP.lesson || S.lesson);
-  else startQuiz(S.lesson);
-});
-$('btn-all').addEventListener('click', startAll);
-$('btn-ch1').addEventListener('click', () => startChapter('ch1'));
-$('btn-ch2').addEventListener('click', () => startChapter('ch2'));
-$('tabbtn-q').addEventListener('click', () => switchHomeTab('q'));
-$('tabbtn-s').addEventListener('click', () => switchHomeTab('s'));
-$('lv1-btn').addEventListener('click', () => { curLevel = 1; buildHome(); });
-$('lv2-btn').addEventListener('click', () => { curLevel = 2; buildHome(); });
-
 addEventListener('keydown', e => {
   if (!$('screen-quiz').classList.contains('active')) return;
   if (S.locked) {
@@ -1024,52 +1013,76 @@ addEventListener('keydown', e => {
   if (n >= 0 && $('options').children[n]) { e.preventDefault(); $('options').children[n].click(); }
 });
 
-/* ---------- تهيئة الأنظمة الجديدة ---------- */
+/* ---------- الإقلاع: تحميل المحتوى من JSON ثم بناء التطبيق ---------- */
 function on(id, ev, fn) { const el = $(id); if (el) el.addEventListener(ev, fn); }
-on('btn-next', 'click', () => { S.i++; nextQuestion(); });
-on('btn-home', 'click', () => { if (LP.lesson) { openLesson(LP.lesson); } else { buildHome(); show('home'); } });
-on('btn-lesson-back', 'click', () => { buildHome(); show('home'); });
-on('btn-retry', 'click', () => {
-  curLevel = S.level || 1;
-  if (!S.lesson) { buildHome(); show('home'); return; }
-  if (S.lesson.id === 'all') startAll();
-  else if (String(S.lesson.id).indexOf('ch:') === 0) startChapter(S.lesson.chapter || S.lesson.id.slice(3));
-  else if (String(S.lesson.id).indexOf('_cram') > -1) startCram(LP.lesson || S.lesson);
-  else if (String(S.lesson.id).indexOf('_mist') > -1) startMistakes(LP.lesson || S.lesson);
-  else startQuiz(S.lesson);
-});
-on('btn-all', 'click', startAll);
-on('btn-ch1', 'click', () => startChapter('ch1'));
-on('btn-ch2', 'click', () => startChapter('ch2'));
-on('tabbtn-q', 'click', () => switchHomeTab('q'));
-on('tabbtn-s', 'click', () => switchHomeTab('s'));
-on('lv1-btn', 'click', () => { curLevel = 1; buildHome(); });
-on('lv2-btn', 'click', () => { curLevel = 2; buildHome(); });
-on('theme-toggle', 'click', toggleTheme);
-on('btn-notebook-clear', 'click', () => { clearNotebook(); buildNotebook(); });
-on('btn-notebook-review', 'click', () => { buildNotebook(); });
-on('btn-export', 'click', exportExam);
-on('btn-print-preview', 'click', () => { window.print(); });
-on('btn-cert-print', 'click', () => { window.print(); });
-on('btn-cert-home', 'click', () => { buildHome(); show('home'); });
-on('btn-cert-notebook', 'click', gotoNotebook);
-on('btn-quit', 'click', () => {
-  if (confirm('هل تريد الخروج من الامتحان الحالي؟ سيتم فقدان تقدمك في هذا السؤال.')) {
-    clearInterval(S.timer);
-    if (LP.lesson) openLesson(LP.lesson); else { buildHome(); show('home'); }
-  }
-});
-on('btn-notebook-from-result', 'click', gotoNotebook);
-on('nav-home', 'click', gotoHome);
-on('nav-summaries', 'click', gotoSummaries);
-on('nav-notebook', 'click', gotoNotebook);
-on('nav-stats', 'click', gotoStats);
+function wireStaticUI() {
+  on('btn-next', 'click', () => { S.i++; nextQuestion(); });
+  on('btn-home', 'click', () => { if (LP.lesson) { openLesson(LP.lesson); } else { buildHome(); show('home'); } });
+  on('btn-lesson-back', 'click', () => { buildHome(); show('home'); });
+  on('btn-retry', 'click', () => {
+    curLevel = S.level || 1;
+    if (!S.lesson) { buildHome(); show('home'); return; }
+    if (S.lesson.id === 'all') startAll();
+    else if (String(S.lesson.id).indexOf('ch:') === 0) startChapter(S.lesson.chapter || S.lesson.id.slice(3));
+    else if (String(S.lesson.id).indexOf('_cram') > -1) startCram(LP.lesson || S.lesson);
+    else if (String(S.lesson.id).indexOf('_mist') > -1) startMistakes(LP.lesson || S.lesson);
+    else startQuiz(S.lesson);
+  });
+  on('btn-all', 'click', startAll);
+  on('btn-ch1', 'click', () => startChapter('ch1'));
+  on('btn-ch2', 'click', () => startChapter('ch2'));
+  on('tabbtn-q', 'click', () => switchHomeTab('q'));
+  on('tabbtn-s', 'click', () => switchHomeTab('s'));
+  on('lv1-btn', 'click', () => { curLevel = 1; buildHome(); });
+  on('lv2-btn', 'click', () => { curLevel = 2; buildHome(); });
+  on('theme-toggle', 'click', toggleTheme);
+  on('btn-notebook-clear', 'click', () => { clearNotebook(); buildNotebook(); });
+  on('btn-notebook-review', 'click', () => { buildNotebook(); });
+  on('btn-export', 'click', exportExam);
+  on('btn-print-preview', 'click', () => { window.print(); });
+  on('btn-cert-print', 'click', () => { window.print(); });
+  on('btn-cert-home', 'click', () => { buildHome(); show('home'); });
+  on('btn-cert-notebook', 'click', gotoNotebook);
+  on('btn-quit', 'click', () => {
+    if (confirm('هل تريد الخروج من الامتحان الحالي؟ سيتم فقدان تقدمك في هذا السؤال.')) {
+      clearInterval(S.timer);
+      if (LP.lesson) openLesson(LP.lesson); else { buildHome(); show('home'); }
+    }
+  });
+  on('btn-notebook-from-result', 'click', gotoNotebook);
+  on('nav-home', 'click', gotoHome);
+  on('nav-summaries', 'click', gotoSummaries);
+  on('nav-notebook', 'click', gotoNotebook);
+  on('nav-stats', 'click', gotoStats);
+}
 
-loadProgress();
-loadNotebook();
-loadXP();
-initSpeech();
-applyTheme();
-buildHome();
-buildNotebook();
-updateHud();
+function bootError(msg) {
+  const box = $('content-loading-msg');
+  if (box) { box.textContent = 'تعذر تحميل المحتوى: ' + msg; box.style.color = 'var(--bad)'; }
+  const main = $('app-main');
+  if (main) main.hidden = false;
+}
+
+async function boot() {
+  loadProgress();
+  loadNotebook();
+  loadXP();
+  initSpeech();
+  applyTheme();
+  wireStaticUI();
+  try {
+    const d = await window.ContentLoader.load();
+    applyContent(d);
+  } catch (e) {
+    bootError((e && e.message) || e);
+    return;
+  }
+  const loading = $('content-loading');
+  if (loading) loading.remove();
+  const main = $('app-main');
+  if (main) main.hidden = false;
+  buildHome();
+  buildNotebook();
+  updateHud();
+}
+boot();

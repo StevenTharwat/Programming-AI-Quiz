@@ -646,4 +646,13 @@ body.light .foot{color:var(--muted)}
 .why-box{background:rgba(34,197,94,.09);border:1px solid rgba(34,197,94,.35);border-radius:12px;padding:10px 12px;margin-top:10px;font-size:13.5px;line-height:1.8}
 .tip-box{background:rgba(251,191,36,.09);border:1px solid rgba(251,191,36,.4);border-radius:12px;padding:10px 12px;margin-top:8px;font-size:13.5px;line-height:1.8}
 .tip-box b,.why-box b{display:block;margin-bottom:4px}
-@media(max-width:640px){.lesson-nav{flex-wrap:wrap}.lesson-nav-mid{order:3;flex-basis:100%}.lesson-nav-title{max-width:100%;font-size:14px;white-space:normal}.lesson-tabs{position:static;padding:10px 2px}.lesson-tabs button{padding:10px 13px;font-size:13.5px}.flash-grid{grid-template-columns:repeat(2,1fr)}#lesson-body{padding-bottom:24px}.lp-card{padding:15px}}
+/* Mobile: topbar sits higher, so unstuck tabs and let content scroll normally */
+@media (max-width:640px){
+  .lesson-tabs{position:static;padding:10px 2px}
+  .lesson-nav{flex-wrap:wrap}
+  .lesson-nav-mid{order:3;flex-basis:100%}
+  .lesson-nav-title{max-width:100%;font-size:14px;white-space:normal}
+  .flash-grid{grid-template-columns:repeat(2,1fr)}
+  #lesson-body{padding-bottom:24px}
+  .lp-card{padding:15px}
+}

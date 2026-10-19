@@ -33,9 +33,14 @@
   </div>
 </header>
 
-<main>
+<main id="app-main" hidden>
   <!-- ============ شاشة البداية ============ -->
   <section id="screen-home" class="screen active">
+    <div id="content-loading" class="lp-card" style="text-align:center;padding:28px">
+      <div style="font-size:40px">⏳</div>
+      <h3>جاري تحميل المحتوى...</h3>
+      <p style="color:var(--muted);font-size:13.5px" id="content-loading-msg">نقرأ ملفات الدروس والأسئلة</p>
+    </div>
     <div class="hero">
       <h2>اختر المستوى والدرس وابدأ التحدي</h2>
       <p class="sub" id="hero-sub"></p>
@@ -203,24 +208,8 @@
   <button class="nav-item nav-stats" id="nav-stats" title="التقدم والإحصائيات">📊</button>
 </nav>
 
-<script src="data-11.js"></script>
-<script src="data-12.js"></script>
-<script src="data-13.js"></script>
-<script src="data-14.js"></script>
-<script src="data-21.js"></script>
-<script src="data-22.js"></script>
-<script src="data-23.js"></script>
-<script src="data-variety.js"></script>
-<script src="data2-11.js"></script>
-<script src="data2-12.js"></script>
-<script src="data2-13.js"></script>
-<script src="data2-14.js"></script>
-<script src="data2-21.js"></script>
-<script src="data2-22.js"></script>
-<script src="data2-23.js"></script>
-<script src="data2-variety.js"></script>
-<script src="summaries.js"></script>
-<script src="lesson-extras.js"></script>
+<script src="content-bundle.js"></script>
+<script src="content-loader.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
