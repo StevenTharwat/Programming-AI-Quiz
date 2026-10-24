@@ -380,7 +380,7 @@ function buildHome() {
   const bank = curBank();
   const total = bank.reduce((a, L) => a + L.questions.length, 0);
   $('hero-sub').textContent = ar(total) + ' سؤالا في ' + LEVEL_NAME[curLevel]
-    + ' من منهج الفصول الأول والثاني — كل إجابة صحيحة تضيف نقاطا، والإجابة الخاطئة تنقصك';
+    + ' من منهج الفصول الأربعة — كل إجابة صحيحة تضيف نقاطا، والإجابة الخاطئة تنقصك';
   $('lv1-btn').classList.toggle('on', curLevel === 1);
   $('lv2-btn').classList.toggle('on', curLevel === 2);
   $('lv-desc').textContent = LEVEL_DESC[curLevel];
@@ -408,6 +408,11 @@ function buildHome() {
   const chCount = ch => curBank().filter(L => chapterIds(ch, curLevel).includes(L.id)).reduce((a, L) => a + L.questions.length, 0);
   $('btn-ch1').textContent = '🎓 امتحان الفصل الأول 1-1..1-4 (' + ar(chCount('ch1')) + ' سؤال)';
   $('btn-ch2').textContent = '🛡️ امتحان الفصل الثاني 2-1..2-3 (' + ar(chCount('ch2')) + ' سؤال)';
+  $('btn-ch3').textContent = '🌐 امتحان الفصل الثالث 3-1..3-3 (' + ar(chCount('ch3')) + ' سؤال)';
+  $('btn-ch4').textContent = '📐 امتحان الفصل الرابع 4-1..4-4 (' + ar(chCount('ch4')) + ' سؤال)';
+  const totalQ = l => BANKS[l].reduce((a, L) => a + L.questions.length, 0);
+  $('btn-final1').textContent = '🏁 الامتحان العام النهائي — كل الفصول، المستوى الأول (' + ar(totalQ(1)) + ' سؤال)';
+  $('btn-final2').textContent = '🏁 الامتحان العام النهائي — كل الفصول، المستوى الثاني (' + ar(totalQ(2)) + ' سؤال)';
 }
 
 /* ---------- بدء الامتحان ---------- */
@@ -453,6 +458,28 @@ function startAll() {
   $('q-lesson').textContent = 'شامل';
   $('q-level').textContent = LEVEL_NAME[curLevel];
   $('q-level').classList.toggle('lvl2', curLevel === 2);
+  nextQuestion();
+}
+
+/* امتحان عام نهائي: كل أسئلة الفصول الأربعة في مستوى محدد */
+function startFinal(level) {
+  const bank = BANKS[level];
+  const mix = bank.flatMap(L => L.questions).slice();
+  const meta = {
+    num: 'نهائي — المستوى ' + (level === 1 ? 'الأول' : 'الثاني'),
+    title: 'الامتحان العام النهائي — المستوى ' + (level === 1 ? 'الأول' : 'الثاني'),
+    icon: '🏁', color: '#f59e0b'
+  };
+  const fake = { id: 'final:L' + level, num: meta.num, title: meta.title, icon: meta.icon, color: meta.color, questions: mix, finalLevel: level };
+  S.lesson = fake;
+  S.level = level;
+  S.queue = shuffle(mix);
+  S.i = 0; S.score = 0; S.streak = 0; S.bestStreak = 0;
+  S.correct = 0; S.wrong = 0; S.fast = 0; S.wrongList = [];
+  show('quiz');
+  $('q-lesson').textContent = meta.title;
+  $('q-level').textContent = LEVEL_NAME[level];
+  $('q-level').classList.toggle('lvl2', level === 2);
   nextQuestion();
 }
 
@@ -516,7 +543,7 @@ function nextQuestion() {
 
   // وضع الحفظ: بدون مؤقت — وضع الامتحان: مؤقت 30 ثانية
   clearInterval(S.timer);
-  if (StudyMode === 'study' && S.lesson && S.lesson.id && !String(S.lesson.id).startsWith('ch:') && S.lesson.id !== 'all' && String(S.lesson.id).indexOf('_') === -1) {
+  if (StudyMode === 'study' && S.lesson && S.lesson.id && !String(S.lesson.id).startsWith('ch:') && !String(S.lesson.id).startsWith('final:') && S.lesson.id !== 'all' && String(S.lesson.id).indexOf('_') === -1) {
     $('timer-fill').style.width = '100%';
     return;
   }
@@ -898,8 +925,8 @@ function finish() {
   sfxEnd();
   celebrate(120);
 
-  // تحديث التقدم ونقاط الإكمال للدرس الحالي (إذا كان درسًا عاديًا وليس امتحانًا شاملاً/فصلاً)
-  if (S.lesson && S.lesson.id && !String(S.lesson.id).startsWith('ch:') && S.lesson.id !== 'all') {
+  // تحديث التقدم ونقاط الإكمال للدرس الحالي (إذا كان درسًا عاديًا وليس امتحانًا شاملاً/فصلاً/نهائيًا)
+  if (S.lesson && S.lesson.id && !String(S.lesson.id).startsWith('ch:') && !String(S.lesson.id).startsWith('final:') && S.lesson.id !== 'all') {
     const xpEarned = pct === 100 ? CFG.xpPerfect : (pct >= 80 ? CFG.xpLessonComplete : 25);
     addXP(xpEarned);
     // حفظ التقدم على الدرس الأصلي (حتى لو امتحان فرعي cram/mist)
@@ -908,7 +935,7 @@ function finish() {
   }
 
   // إذا اكتملت جميع الدروس، اعرض شهادة الإتمام بدلاً من شاشة النتيجة العادية
-  if (S.lesson && S.lesson.id && !String(S.lesson.id).startsWith('ch:') && S.lesson.id !== 'all' && allLessonsCompleted()) {
+  if (S.lesson && S.lesson.id && !String(S.lesson.id).startsWith('ch:') && !String(S.lesson.id).startsWith('final:') && S.lesson.id !== 'all' && allLessonsCompleted()) {
     $('cert-name').textContent = 'طالب / طالبة';
     $('cert-date').textContent = new Date().toLocaleDateString('ar-SA');
     $('cert-score').textContent = ar(TotalXP) + ' نقطة خبرة';
@@ -963,7 +990,7 @@ function switchHomeTab(which) {
 function buildSummaries() {
   const box = $('sum-lessons');
   box.innerHTML = '';
-  ['l11', 'l12', 'l13', 'l14', 'l21', 'l22', 'l23'].forEach(k => {
+  ['l11', 'l12', 'l13', 'l14', 'l21', 'l22', 'l23', 'l31', 'l32', 'l33', 'l41', 'l42', 'l43', 'l44'].forEach(k => {
     const s = SUMMARIES[k];
     if (!s) return;
     const el = document.createElement('article');
@@ -998,13 +1025,15 @@ function buildSummaries() {
   });
   const cb = $('sum-chapters');
   cb.innerHTML = '';
-  ['ch1', 'ch2'].forEach(k => {
+  const CH_COLORS = { ch1: '#a78bfa', ch2: '#22d3ee', ch3: '#34d399', ch4: '#fbbf24' };
+  const CH_ICONS = { ch1: '🎓', ch2: '🛡️', ch3: '🌐', ch4: '📐' };
+  ['ch1', 'ch2', 'ch3', 'ch4'].forEach(k => {
     const c = CHAPTER_SUMMARIES[k];
     if (!c) return;
       const d = document.createElement('article');
       d.className = 'sum-card ch-card';
-      d.style.setProperty('--c', k === 'ch1' ? '#a78bfa' : '#22d3ee');
-      d.innerHTML = '<div class="sum-head"><span class="sum-icon">' + (k === 'ch1' ? '🎓' : '🛡️') + '</span>' +
+      d.style.setProperty('--c', CH_COLORS[k]);
+      d.innerHTML = '<div class="sum-head"><span class="sum-icon">' + CH_ICONS[k] + '</span>' +
         '<div><div class="sum-num">' + esc((c.lessons || []).join('، ')) + '</div>' +
         '<div class="sum-title2">' + esc(c.title || '') + '</div></div></div>' +
         '<p class="sum-over">' + esc(c.overview || '') + '</p>';
@@ -1047,6 +1076,7 @@ function wireStaticUI() {
     curLevel = S.level || 1;
     if (!S.lesson) { buildHome(); show('home'); return; }
     if (S.lesson.id === 'all') startAll();
+    else if (String(S.lesson.id).indexOf('final:') === 0) startFinal(S.lesson.finalLevel || 1);
     else if (String(S.lesson.id).indexOf('ch:') === 0) startChapter(S.lesson.chapter || S.lesson.id.slice(3));
     else if (String(S.lesson.id).indexOf('_cram') > -1) startCram(LP.lesson || S.lesson);
     else if (String(S.lesson.id).indexOf('_mist') > -1) startMistakes(LP.lesson || S.lesson);
@@ -1055,6 +1085,10 @@ function wireStaticUI() {
   on('btn-all', 'click', startAll);
   on('btn-ch1', 'click', () => startChapter('ch1'));
   on('btn-ch2', 'click', () => startChapter('ch2'));
+  on('btn-ch3', 'click', () => startChapter('ch3'));
+  on('btn-ch4', 'click', () => startChapter('ch4'));
+  on('btn-final1', 'click', () => startFinal(1));
+  on('btn-final2', 'click', () => startFinal(2));
   on('tabbtn-q', 'click', () => switchHomeTab('q'));
   on('tabbtn-s', 'click', () => switchHomeTab('s'));
   on('lv1-btn', 'click', () => { curLevel = 1; buildHome(); if (!$('pane-summaries').hidden) buildSummaries(); });
