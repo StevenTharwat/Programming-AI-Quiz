@@ -1,5 +1,5 @@
-/* Build the offline bundle FROM content/*.json (identical bytes, guaranteed).
-   Usage: node build-bundle.js  (run after build-content.js)
+/* Build the offline bundle FROM content/*.json (the single source of truth).
+   Usage: node build-bundle.js  (after ANY edit to content/*.json)
    Writes content-bundle.js : window.__CONTENT_BUNDLE__ = {...}
    Used when opening index.html via file:// where fetch() is blocked. */
 'use strict';

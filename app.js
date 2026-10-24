@@ -36,6 +36,13 @@ function applyContent(d) {
 let curLevel = 1;
 const curBank = () => BANKS[curLevel];
 
+/* ---------- مطابقة مفاتيح المحتوى بين المستويين ----------
+   دروس المستوى الأول: l11..l23 | دروس المستوى الثاني: h11..h23
+   أما الملخصات والإضافات وفهرس الفصول فهي بمفاتيح l* فقط. */
+const contentKey = id => String(id).replace(/^h(\d)/, 'l$1');
+const chapterIds = (ch, level) => (CHAPTERS[ch] || []).map(id => (level === 2 ? id.replace(/^l(\d)/, 'h$1') : id));
+const progressKey = (id, level) => String(id) + '_L' + (level || curLevel);
+
 const CFG = {
   perAll: 30,         // عدد أسئلة الامتحان الشامل
   time: 30,           // ثواني لكل سؤال
@@ -105,8 +112,22 @@ function saveNotebook() {
   try { localStorage.setItem(NOTEBOOK_KEY, JSON.stringify(Notebook)); } catch (e) {}
 }
 function addToNotebook(q, right, lesson) {
-  Notebook.push({ q, right, lesson: lesson.num || lesson.title || '', date: Date.now() });
+  const lid = String((lesson && lesson.id) || '').split('_')[0];
+  Notebook.push({
+    q, right,
+    lesson: (lesson && lesson.num) || (lesson && lesson.title) || '',
+    lid, level: curLevel, date: Date.now()
+  });
   saveNotebook();
+}
+/* هل الخطأ من هذا الدرس؟ نعتمد على معرّف الدرس والمستوى، ومع fallback على رقم الدرس للبيانات القديمة */
+function notebookMatches(item, lesson) {
+  const lid = String((lesson && lesson.id) || '').split('_')[0];
+  if (item.lid) {
+    if (item.lid !== lid) return false;
+    return (item.level == null || item.level === curLevel);
+  }
+  return String(item.lesson || '').indexOf(lesson.num) > -1;
 }
 function clearNotebook() {
   Notebook = [];
@@ -150,8 +171,8 @@ function addXP(amount) {
   $('xp-chip').innerHTML = '✨ <b>' + ar(TotalXP) + '</b>';
 }
 function allLessonsCompleted() {
-  const ids = ['l11','l12','l13','l14','l21','l22','l23'];
-  return ids.every(id => getProgress(id).done);
+  const ids = curBank().map(L => L.id);
+  return ids.length > 0 && ids.every(id => getProgress(progressKey(id, curLevel)).done);
 }
 
 /* ---------- النطق الصوتي (Web Speech API) ---------- */
@@ -266,7 +287,7 @@ function openLesson(lesson) {
   $('lesson-nav-icon').textContent = lesson.icon || '📚';
   $('lesson-nav-num').textContent = 'الدرس ' + lesson.num + ' — ' + LEVEL_NAME[curLevel];
   $('lesson-nav-title').textContent = lesson.title;
-  const p = getProgress(lesson.id + '_L' + curLevel);
+  const p = getProgress(progressKey(lesson.id, curLevel));
   $('lesson-nav-best').textContent = '🏆 ' + ar(p.best) + '٪';
   document.querySelectorAll('#lesson-tabs button').forEach(b => {
     b.classList.toggle('on', b.dataset.lt === 'study');
@@ -276,7 +297,7 @@ function openLesson(lesson) {
   show('lesson');
 }
 function lessonReviewInfo() {
-  const p = getProgress(LP.lesson.id + '_L' + curLevel);
+  const p = getProgress(progressKey(LP.lesson.id, curLevel));
   if (!p.lastPlayed) return '👋 أهلا بيك! امشي بالترتيب: خريطة 60 ثانية ← القصة ← جمل الحفظ ← اختبر.';
   const days = Math.floor((Date.now() - p.lastPlayed) / 864e5);
   if (p.best < 70) return '⚠️ نتيجتك ' + ar(p.best) + '٪ — راجع القصة وجمل الحفظ قبل ما تختبر تاني.';
@@ -287,7 +308,8 @@ function lessonReviewInfo() {
 function renderLessonBody() {
   const L = LP.lesson;
   if (!L) { buildHome(); show('home'); return; }
-  const sum = SUMMARIES[L.id] || {}, ex = LESSON_EXTRAS[L.id] || {};
+  const ck = contentKey(L.id);
+  const sum = SUMMARIES[ck] || {}, ex = LESSON_EXTRAS[ck] || {};
   // إظهار التبويب المختار في منتصف الشريط على الموبايل
   try {
     const on = document.querySelector('#lesson-tabs button.on');
@@ -322,7 +344,7 @@ function renderLessonBody() {
       fl.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flip(); } });
     });
   } else if (LP.tab === 'quiz') {
-    const nbCount = Notebook.filter(n => (n.lesson || '').indexOf(L.num) > -1).length;
+    const nbCount = Notebook.filter(n => notebookMatches(n, L)).length;
     const c = mk('<h3>🎯 اختبر نفسك — ' + ar(L.questions.length) + ' سؤال</h3><div class="quiz-modes"><div class="mode-row"><button class="mode-btn ' + (StudyMode === 'study' ? 'on' : '') + '" id="lp-m-s2">📖 حفظ</button><button class="mode-btn ' + (StudyMode === 'exam' ? 'on' : '') + '" id="lp-m-e2">⏱️ امتحان</button></div><div class="mode-row"><button class="mode-btn primary" id="lp-q-all">ابدأ الدرس كامل</button><button class="mode-btn warn" id="lp-q-cram">🔥 ليلة الامتحان (15)</button></div><div class="mode-row"><button class="mode-btn" id="lp-q-mist">📘 أخطائي (' + ar(nbCount) + ')</button></div><p style="font-size:13px;color:var(--muted)">الحفظ: بدون وقت وبدون نقص ومع شرح. الامتحان: 30 ثانية و−٥ على الغلط.</p></div>');
     c.querySelector('#lp-q-all').onclick = () => startQuiz(L);
     c.querySelector('#lp-q-cram').onclick = () => startCram(L);
@@ -342,7 +364,7 @@ function startCram(lesson) {
   nextQuestion();
 }
 function startMistakes(lesson) {
-  const mine = Notebook.filter(n => (n.lesson || '').indexOf(lesson.num) > -1);
+  const mine = Notebook.filter(n => notebookMatches(n, lesson));
   if (!mine.length) { alert('لسه مغلطتش في الدرس ده — ابدأ الاختبار الأول 💪'); return startQuiz(lesson); }
   const qs = mine.slice(-20).map(n => ({ q: n.q, o: ['✅ ' + n.right, '❌ راجع الملخص والقصة'], a: 0 }));
   const fake = { id: lesson.id + '_mist', num: lesson.num + ' 📘', title: lesson.title + ' — أخطائي', icon: '📘', color: lesson.color, questions: qs };
@@ -364,7 +386,7 @@ function buildHome() {
   $('lv-desc').textContent = LEVEL_DESC[curLevel];
   wrap.innerHTML = '';
   bank.forEach(L => {
-    const prog = getProgress(L.id);
+    const prog = getProgress(progressKey(L.id, curLevel));
     const pct = prog.done ? 100 : Math.round((prog.best / 100) * 100);
     const doneBadge = prog.done ? '<span class="lesson-done">✅ مكتمل</span>' : '';
     const el = document.createElement('button');
@@ -383,7 +405,7 @@ function buildHome() {
   });
   $('btn-all').textContent = (curLevel === 1 ? '🎓 امتحان شامل' : '🎓 امتحان شامل — المستوى الثاني');
   // عدّادات امتحانات الفصول حسب المستوى الحالي
-  const chCount = ch => curBank().filter(L => CHAPTERS[ch].includes(L.id)).reduce((a, L) => a + L.questions.length, 0);
+  const chCount = ch => curBank().filter(L => chapterIds(ch, curLevel).includes(L.id)).reduce((a, L) => a + L.questions.length, 0);
   $('btn-ch1').textContent = '🎓 امتحان الفصل الأول 1-1..1-4 (' + ar(chCount('ch1')) + ' سؤال)';
   $('btn-ch2').textContent = '🛡️ امتحان الفصل الثاني 2-1..2-3 (' + ar(chCount('ch2')) + ' سؤال)';
 }
@@ -403,7 +425,7 @@ function startQuiz(lesson) {
 }
 
 function startChapter(ch) {
-  const ids = CHAPTERS[ch] || [];
+  const ids = chapterIds(ch, curLevel);
   const meta = CHAPTER_META[ch] || { num: ch, title: 'امتحان الفصل', icon: '🎓', color: '#a78bfa' };
   const mix = shuffle(curBank().filter(L => ids.includes(L.id)).flatMap(L => L.questions));
   const fake = { id: 'ch:' + ch, num: meta.num, title: meta.title, icon: meta.icon, color: meta.color, questions: mix, chapter: ch };
@@ -451,7 +473,7 @@ function updateBottomNav() {
   nav.hidden = activeId !== 'screen-home';
 
   // تحديث حالات التمييز (active)
-  const summariesVisible = !$('pane-summaries').hidden;
+  const summariesVisible = !($('pane-summaries') && $('pane-summaries').hidden);
   if ($('nav-home')) $('nav-home').classList.toggle('active', !summariesVisible);
   if ($('nav-summaries')) $('nav-summaries').classList.toggle('active', summariesVisible);
   if ($('nav-notebook')) $('nav-notebook').classList.toggle('active', false);
@@ -743,7 +765,7 @@ function smartExplain(q) {
   if (q.explain) return q.explain;
   if (q.fix) return q.fix;
   try {
-    const id = (S.lesson && S.lesson.id ? String(S.lesson.id).split('_')[0] : '');
+    const id = contentKey((S.lesson && S.lesson.id ? String(S.lesson.id).split('_')[0] : ''));
     const sum = SUMMARIES[id] || {};
     const kt = (sum.keyTerms || []).find(k => q.q && q.q.indexOf(k.t) > -1);
     if (kt) return kt.t + ': ' + kt.d;
@@ -752,7 +774,7 @@ function smartExplain(q) {
 }
 function smartTip(q) {
   try {
-    const id = (S.lesson && S.lesson.id ? String(S.lesson.id).split('_')[0] : '');
+    const id = contentKey((S.lesson && S.lesson.id ? String(S.lesson.id).split('_')[0] : ''));
     const ex = LESSON_EXTRAS[id] || {};
     const all = (ex.mnemonics || []);
     for (let i = 0; i < all.length; i++) {
@@ -846,7 +868,8 @@ function finish() {
   // تحديث أفضل نتيجة للدرس (قبل عرضها على النتيجة)
   let bestPct = pct;
   if (S.lesson && S.lesson.id && !String(S.lesson.id).startsWith('ch:') && S.lesson.id !== 'all') {
-    const prog = getProgress(S.lesson.id);
+    const baseId = String(S.lesson.id).split('_')[0];
+    const prog = getProgress(progressKey(baseId, S.level));
     bestPct = Math.max(prog.best, pct);
   }
   $('st-best').textContent = ar(bestPct) + '٪';
@@ -880,8 +903,8 @@ function finish() {
     const xpEarned = pct === 100 ? CFG.xpPerfect : (pct >= 80 ? CFG.xpLessonComplete : 25);
     addXP(xpEarned);
     // حفظ التقدم على الدرس الأصلي (حتى لو امتحان فرعي cram/mist)
-    const saveId = String(S.lesson.id).split('_')[0] + '_L' + S.level;
-    updateProgress(saveId, pct, xpEarned);
+    const baseId = String(S.lesson.id).split('_')[0];
+    updateProgress(progressKey(baseId, S.level), pct, xpEarned);
   }
 
   // إذا اكتملت جميع الدروس، اعرض شهادة الإتمام بدلاً من شاشة النتيجة العادية
@@ -935,6 +958,7 @@ function switchHomeTab(which) {
   $('pane-questions').hidden = !q;
   $('pane-summaries').hidden = q;
   if (!q) { buildSummaries(); buildNotebook(); }
+  updateBottomNav();
 }
 function buildSummaries() {
   const box = $('sum-lessons');
@@ -1033,8 +1057,8 @@ function wireStaticUI() {
   on('btn-ch2', 'click', () => startChapter('ch2'));
   on('tabbtn-q', 'click', () => switchHomeTab('q'));
   on('tabbtn-s', 'click', () => switchHomeTab('s'));
-  on('lv1-btn', 'click', () => { curLevel = 1; buildHome(); });
-  on('lv2-btn', 'click', () => { curLevel = 2; buildHome(); });
+  on('lv1-btn', 'click', () => { curLevel = 1; buildHome(); if (!$('pane-summaries').hidden) buildSummaries(); });
+  on('lv2-btn', 'click', () => { curLevel = 2; buildHome(); if (!$('pane-summaries').hidden) buildSummaries(); });
   on('theme-toggle', 'click', toggleTheme);
   on('btn-notebook-clear', 'click', () => { clearNotebook(); buildNotebook(); });
   on('btn-notebook-review', 'click', () => { buildNotebook(); });

@@ -10,13 +10,13 @@
     "lesson-extras.json"
   ],
   "expected": {
-    "l1Lessons": 7,
-    "l2Lessons": 7,
-    "l1Questions": 246,
-    "l2Questions": 222,
-    "varietyL1": 100,
-    "varietyL2": 35,
-    "summaries": 7,
-    "extras": 7
+    "l1Lessons": 14,
+    "l2Lessons": 14,
+    "l1Questions": 417,
+    "l2Questions": 367,
+    "varietyL1": 164,
+    "varietyL2": 69,
+    "summaries": 14,
+    "extras": 14
   }
 }
